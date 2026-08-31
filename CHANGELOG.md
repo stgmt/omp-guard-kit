@@ -1,5 +1,17 @@
 # omp-guard-kit
 
+## 0.19.0
+
+### Breaking Changes
+
+- Rename the package, OMP plugin, marketplace, and GitHub repository from the pi-guardrails identity to omp-guard-kit.
+
+## 0.18.0
+
+### Minor Changes
+
+- Add deterministic OMP project-root artifact protection with shell and direct-tool write-target checks, configurable allow/deny policies, diagnostics, and opt-in stale-entry pruning.
+
 ## 0.17.1
 
 ### Patch Changes

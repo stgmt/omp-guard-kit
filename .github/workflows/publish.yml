@@ -36,7 +36,6 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
-          scope: "@aliou"
           cache: "pnpm"
 
       - name: Upgrade npm for stage publish support

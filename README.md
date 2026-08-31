@@ -1,4 +1,3 @@
-
 # OMP Guard Kit
 
 OMP Guard Kit adds safety checks to Pi so agents are less likely to read secrets, write protected files, access paths outside the workspace, or run dangerous shell commands by accident.
@@ -16,9 +15,10 @@ For OMP, add the GitHub marketplace and install the pinned release:
 
 ```bash
 omp plugin marketplace add https://github.com/stgmt/omp-guard-kit
-omp plugin install omp-guard-kit@omp-guard-kit
+omp plugin install omp-guard-kit@omp-guard-kit --scope project
 ```
 
+For a project-specific guard, keep the plugin project-scoped as shown above. Use `--scope user` only when you want the plugin available in every project.
 Pi can load the same package from the tagged GitHub release:
 
 ```bash
@@ -39,6 +39,14 @@ You can change everything later with:
 ```text
 /guardrails:settings
 ```
+
+## What to do first
+
+1. Start OMP from the project directory you want to protect.
+2. Run `/guardrails:onboarding` and choose the protections you want enabled.
+3. Open `/guardrails:settings` whenever you need to change a rule.
+4. Use `/guardrails:examples` to add a preset without replacing existing settings.
+5. Try a harmless write. A disallowed root file is blocked before the tool runs; an allowed nested path continues normally.
 
 ## Included extensions
 
@@ -86,6 +94,47 @@ Its policy is deterministic: deny patterns take priority, matching is case-insen
 
 Relevant configuration fields are `mode` (`extend` or `replace`), `allow`, `deny`, `allowedDirectories`, `ignorePatterns`, `trashPatterns`, `configPatterns`, and `autoPrune`.
 
+For a project-local root-artifact guard, create `.pi/extensions/guardrails.json` in the project:
+
+```json
+{
+  "enabled": true,
+  "features": {
+    "rootArtifacts": true
+  },
+  "rootArtifacts": {
+    "enabled": true,
+    "mode": "extend",
+    "allow": ["README.md", "package.json"],
+    "deny": [],
+    "allowedDirectories": [".pi", "src", "tests"],
+    "ignorePatterns": [],
+    "trashPatterns": [],
+    "configPatterns": [],
+    "autoPrune": {
+      "enabled": false
+    }
+  }
+}
+```
+
+How the fields behave:
+
+- `mode: "extend"` keeps the built-in safe file allowlist and adds your `allow` entries. `mode: "replace"` uses only your `allow` entries.
+- `allow` and `deny` match root-level file names and simple glob patterns, case-insensitively. `deny` always wins.
+- `allowedDirectories` controls immediate directories at the project root. Once a directory is allowed, its descendants are allowed.
+- `ignorePatterns` hides matching file violations; it does not allow an unknown root directory.
+- `trashPatterns` and `configPatterns` label diagnostics. They do not grant access.
+- `autoPrune.enabled` removes only safe, stale basename entries from the local `allow` list. Keep it false unless you want that cleanup.
+
+With the example above:
+
+| Operation | Result |
+| --- | --- |
+| `echo x > unexpected.txt` | Blocked before execution. |
+| `echo x > src/file.txt` | Allowed because `src` is an allowed directory. |
+| `mkdir tmp` | Blocked because `tmp` is not in `allowedDirectories`. |
+| `echo x > "$OUT/file.txt"` | Blocked because the shell destination is unresolved. |
 ## Extension events
 
 OMP Guard Kit emits paired prompt lifecycle events on Pi's shared event bus:
@@ -109,6 +158,19 @@ Advanced users can edit the settings file directly:
 - Project: `.pi/extensions/guardrails.json`
 
 OMP Guard Kit writes a `$schema` field to saved settings files, so modern editors provide autocomplete and validation. The generated schema is committed at [`schema.json`](schema.json).
+
+Choose the settings scope deliberately:
+
+- Use the project file for rules that protect one repository. This is the recommended location for `rootArtifacts`.
+- Use the global file for defaults that should apply across projects.
+- If both scopes exist, start with the project file when diagnosing a rule for the current repository.
+## Troubleshooting
+
+- Nothing is blocked: confirm that the session was started in the project directory and that top-level `enabled`, `features.rootArtifacts`, and `rootArtifacts.enabled` are all `true`.
+- A root file is blocked: add its file name to `rootArtifacts.allow`, or use `mode: "replace"` only if you want to maintain the complete file allowlist yourself.
+- A root directory is blocked: add the directory name to `rootArtifacts.allowedDirectories`. Adding a nested path to `allow` does not allow its parent directory.
+- A command is blocked as unresolved: shell variables and command substitutions cannot be proven safe; use a concrete path or keep the command blocked.
+- To see the current settings and edit them interactively, run `/guardrails:settings`. The guard emits a diagnostic event when it scans the project or blocks a write.
 
 ## Examples
 

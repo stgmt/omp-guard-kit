@@ -4,17 +4,26 @@
 
 Guardrails adds safety checks to Pi so agents are less likely to read secrets, write protected files, access paths outside the workspace, or run dangerous shell commands by accident.
 
-This package installs four Pi extensions:
+This package installs five Pi/OMP extensions:
 
 - **guardrails** for file protection policies, settings, onboarding, and examples.
 - **path-access** for controlling access outside the current workspace.
 - **permission-gate** for confirming or blocking risky shell commands.
 - **herdr** for reporting Guardrails approval prompts to Herdr.
-
+- **root-artifacts** for deterministic protection of unexpected project-root files and directories.
 ## Install
 
+For OMP, add the GitHub marketplace and install the pinned release:
+
 ```bash
-pi install npm:@aliou/pi-guardrails
+omp plugin marketplace add https://github.com/stgmt/omp-repo-guard
+omp plugin install pi-guardrails@stgmt-pi-guardrails
+```
+
+Pi can load the same package from the tagged GitHub release:
+
+```bash
+pi install https://github.com/stgmt/omp-repo-guard#v0.18.0
 ```
 
 ## First run
@@ -74,6 +83,13 @@ The `permission-gate` extension detects dangerous bash commands before they run.
 It catches built-in risky patterns like recursive deletes, privileged commands, disk formatting, broad permission changes, and configured custom patterns. You can allow once, allow for the session, deny, decline and stop (which also aborts the current turn), or configure auto-deny rules.
 
 [![Guardrails permission gate walkthrough](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/permission-gate.gif)](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/permission-gate.mp4)
+### root-artifacts
+
+The `root-artifacts` extension is disabled by default and only activates from a project-local `.pi/extensions/guardrails.json` with `rootArtifacts.enabled: true`. It checks write/edit tool calls before execution and blocks root files outside the configured allowlist, root directories outside `allowedDirectories`, unresolved shell destinations, and paths that escape the project.
+
+Its policy is deterministic: deny patterns take priority, matching is case-insensitive, `.git`, `.svn`, and `.hg` are skipped, and root entries are classified as `trash`, `config`, or `unknown` for diagnostics. `autoPrune.enabled` is opt-in and atomically removes only safe stale basename entries from the local `allow` list.
+
+Relevant configuration fields are `mode` (`extend` or `replace`), `allow`, `deny`, `allowedDirectories`, `ignorePatterns`, `trashPatterns`, `configPatterns`, and `autoPrune`.
 
 ## Extension events
 

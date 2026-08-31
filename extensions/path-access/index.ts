@@ -31,6 +31,27 @@ import { createPathAccessPromptComponent, type PromptResult } from "./prompt";
 import { createPathAccessRule } from "./rules";
 import { targetsForTool } from "./targets";
 
+function extractSkillPaths(event: unknown): AllowedPath[] {
+  if (!event || typeof event !== "object" || !("systemPromptOptions" in event))
+    return [];
+  const options = event.systemPromptOptions;
+  if (!options || typeof options !== "object" || !("skills" in options))
+    return [];
+  const skills = options.skills;
+  if (!Array.isArray(skills)) return [];
+  return skills.flatMap((skill) => {
+    if (!skill || typeof skill !== "object") return [];
+    if (!("filePath" in skill) || !("baseDir" in skill)) return [];
+    const filePath = skill.filePath;
+    const baseDir = skill.baseDir;
+    if (typeof filePath !== "string" || typeof baseDir !== "string") return [];
+    return [
+      { kind: "file" as const, path: filePath },
+      { kind: "directory" as const, path: baseDir },
+    ];
+  });
+}
+
 export default async function pathAccess(pi: ExtensionAPI) {
   await configLoader.load();
 
@@ -41,14 +62,8 @@ export default async function pathAccess(pi: ExtensionAPI) {
   let currentSkillAllowedPaths: AllowedPath[] = [];
 
   pi.on("before_agent_start", (event) => {
-    const skills = event.systemPromptOptions.skills;
-
-    if (!skills || skills.length === 0) return;
-
-    currentSkillAllowedPaths = skills.flatMap((skill) => [
-      { kind: "file", path: skill.filePath },
-      { kind: "directory", path: skill.baseDir },
-    ]);
+    const skills = extractSkillPaths(event);
+    if (skills.length > 0) currentSkillAllowedPaths = skills;
   });
 
   pi.events.on(GUARDRAILS_FEATURE_REQUEST_EVENT, () => {

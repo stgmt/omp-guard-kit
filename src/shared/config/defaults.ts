@@ -9,10 +9,22 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
     policies: true,
     permissionGate: true,
     pathAccess: false,
+    rootArtifacts: false,
   },
   pathAccess: {
     mode: "ask",
     allowedPaths: [{ kind: "file", path: "/dev/null" }],
+  },
+  rootArtifacts: {
+    enabled: false,
+    mode: "extend",
+    allow: [],
+    deny: [],
+    allowedDirectories: undefined,
+    ignorePatterns: [],
+    trashPatterns: [],
+    configPatterns: [],
+    autoPrune: { enabled: false },
   },
   policies: {
     rules: [

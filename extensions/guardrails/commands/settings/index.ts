@@ -53,6 +53,11 @@ const FEATURE_UI: Record<
     label: "Path access",
     description: "Restrict tool access to the current working directory",
   },
+  rootArtifacts: {
+    label: "Root artifacts",
+    description:
+      "Block unexpected files and directories created in the project root",
+  },
 };
 
 function createPolicyRuleEditor(options: {

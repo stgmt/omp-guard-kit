@@ -19,7 +19,7 @@
               "pattern": "^\\d{1,15}(\\.\\d{1,15})?(\\.\\d{1,15})?$"
             }
           ],
-          "description": "Config schema version, stamped by migrations. Current version: 0.16.2."
+          "description": "Config schema version, stamped by migrations. Current version: 0.18.0."
         },
         "enabled": {
           "type": "boolean",
@@ -63,6 +63,9 @@
             },
             "pathAccess": {
               "type": "boolean"
+            },
+            "rootArtifacts": {
+              "type": "boolean"
             }
           },
           "description": "Enable or disable individual Guardrails feature extensions."
@@ -84,6 +87,10 @@
         "pathAccess": {
           "$ref": "#/definitions/PathAccessConfig",
           "description": "Outside-workspace path access settings."
+        },
+        "rootArtifacts": {
+          "$ref": "#/definitions/RootArtifactsConfig",
+          "description": "Root-level artifact policy."
         },
         "envFiles": {
           "type": "object",
@@ -308,6 +315,79 @@
         }
       ],
       "description": "A path grant with an explicit kind.\n\n`file` matches the exact path only. `directory` matches the directory itself and any descendant (boundary/prefix match).\n\nThis replaces the previous trailing-slash convention on a flat `string[]`, where the kind was inferred from whether a path ended in `/`."
+    },
+    "RootArtifactsConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable root-artifact policy evaluation."
+        },
+        "mode": {
+          "$ref": "#/definitions/RootArtifactsMode",
+          "description": "Whether built-in root files are extended or replaced."
+        },
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Exact names or case-insensitive glob patterns allowed at the root."
+        },
+        "deny": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Exact names or case-insensitive glob patterns denied at the root."
+        },
+        "allowedDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Immediate root directories allowed when set."
+        },
+        "ignorePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "File patterns hidden from root diagnostics."
+        },
+        "trashPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional classifier patterns for obvious trash."
+        },
+        "configPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional classifier patterns for likely configuration."
+        },
+        "autoPrune": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Explicitly opt in to stale allow-entry pruning."
+        }
+      },
+      "additionalProperties": false
+    },
+    "RootArtifactsMode": {
+      "type": "string",
+      "enum": [
+        "extend",
+        "replace"
+      ]
     },
     "DangerousPattern": {
       "type": "object",

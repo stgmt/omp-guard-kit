@@ -1,6 +1,7 @@
 {
-  "name": "@aliou/pi-guardrails",
-  "version": "0.17.1",
+  "name": "@stgmt/pi-guardrails",
+  "version": "0.18.0",
+  "description": "Composable Pi and OMP guardrails with deterministic root-artifact protection.",
   "license": "MIT",
   "type": "module",
   "private": false,
@@ -8,12 +9,20 @@
     "pi-package",
     "pi-extension",
     "pi",
+    "omp",
     "guardrails",
     "security"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/aliou/pi-guardrails"
+    "url": "https://github.com/stgmt/omp-repo-guard.git"
+  },
+  "homepage": "https://github.com/stgmt/omp-repo-guard",
+  "bugs": {
+    "url": "https://github.com/stgmt/omp-repo-guard/issues"
+  },
+  "engines": {
+    "omp": ">=18.0.10"
   },
   "pi": {
     "extensions": [
@@ -25,12 +34,19 @@
     "video": "https://assets.aliou.me/github/aliou/pi-guardrails/demo.mp4",
     "image": "https://assets.aliou.me/github/aliou/pi-guardrails/banner.png"
   },
+  "omp": {
+    "extensions": [
+      "./dist/extension.js"
+    ]
+  },
   "publishConfig": {
     "access": "public"
   },
   "files": [
     "src",
     "extensions",
+    "dist",
+    ".omp-plugin",
     "README.md",
     "schema.json",
     "!src/**/*.test.ts",
@@ -60,10 +76,13 @@
     "vitest": "^4.1.4"
   },
   "scripts": {
+    "build": "bun build extensions/omp.ts --outfile dist/extension.js --target bun --format esm --minify",
     "typecheck": "tsc --noEmit",
-    "gen:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.16.2",
-    "check:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.16.2 --check",
+    "gen:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.18.0",
+    "check:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.18.0 --check",
     "test": "vitest run",
+    "test:mutation": "vitest run tests/root-artifacts.mutation.test.ts",
+    "test:e2e": "bun tests/omp-e2e.ts",
     "test:watch": "vitest",
     "lint": "biome check",
     "format": "biome check --write",

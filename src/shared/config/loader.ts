@@ -7,7 +7,13 @@ import pkg from "../../../package.json" with { type: "json" };
 import type { AllowedPath } from "../../core/paths/path";
 import { DEFAULT_CONFIG } from "./defaults";
 import { migrations } from "./migration";
-import type { GuardrailsConfig, PolicyRule, ResolvedConfig } from "./types";
+import type {
+  GuardrailsConfig,
+  PolicyRule,
+  ResolvedConfig,
+  ResolvedRootArtifactsConfig,
+  RootArtifactsConfig,
+} from "./types";
 
 class GuardrailsConfigLoader extends ConfigLoader<
   GuardrailsConfig,
@@ -25,6 +31,47 @@ function ensureConfigVersion(config: GuardrailsConfig): GuardrailsConfig {
   return { ...config, version: pkg.version };
 }
 
+function normalizeRootArtifacts(
+  resolved: ResolvedRootArtifactsConfig,
+  ...layers: Array<RootArtifactsConfig | undefined>
+): ResolvedRootArtifactsConfig {
+  const raw = layers.reduce<Record<string, unknown>>((merged, layer) => {
+    if (layer && typeof layer === "object") Object.assign(merged, layer);
+    return merged;
+  }, {});
+  const strings = (value: unknown, fallback: string[]): string[] =>
+    Array.isArray(value)
+      ? value
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : fallback;
+  const mode =
+    raw.mode === "replace"
+      ? "replace"
+      : raw.mode === "extend"
+        ? "extend"
+        : resolved.mode;
+  const autoPrune =
+    raw.autoPrune &&
+    typeof raw.autoPrune === "object" &&
+    "enabled" in raw.autoPrune
+      ? { enabled: raw.autoPrune.enabled === true }
+      : resolved.autoPrune;
+  return {
+    enabled: typeof raw.enabled === "boolean" ? raw.enabled : resolved.enabled,
+    mode,
+    allow: strings(raw.allow, resolved.allow),
+    deny: strings(raw.deny, resolved.deny),
+    allowedDirectories: Object.hasOwn(raw, "allowedDirectories")
+      ? strings(raw.allowedDirectories, [])
+      : resolved.allowedDirectories,
+    ignorePatterns: strings(raw.ignorePatterns, resolved.ignorePatterns),
+    trashPatterns: strings(raw.trashPatterns, resolved.trashPatterns),
+    configPatterns: strings(raw.configPatterns, resolved.configPatterns),
+    autoPrune,
+  };
+}
 export function createGuardrailsConfigLoader(): GuardrailsConfigLoader {
   return new GuardrailsConfigLoader("guardrails", DEFAULT_CONFIG, {
     scopes: ["global", "local", "memory"],
@@ -79,6 +126,12 @@ export function createGuardrailsConfigLoader(): GuardrailsConfigLoader {
         }
       }
       resolved.pathAccess.allowedPaths = [...mergedPaths.values()];
+      resolved.rootArtifacts = normalizeRootArtifacts(
+        resolved.rootArtifacts,
+        global?.rootArtifacts,
+        local?.rootArtifacts,
+        memory?.rootArtifacts,
+      );
 
       return resolved;
     },

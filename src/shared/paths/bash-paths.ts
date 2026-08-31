@@ -1,10 +1,9 @@
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import { parse } from "@aliou/sh";
 import {
-  expandHomePath,
   isWithinBoundary,
   maybePathLike,
+  resolveFromCwd,
 } from "../../core/paths/path";
 import {
   commandCreatesPaths,
@@ -79,7 +78,7 @@ export async function extractBashPathCandidates(
 
     const expanded = await expandCandidate(token, cwd);
     for (const file of expanded) {
-      const abs = resolve(cwd, expandHomePath(file));
+      const abs = resolveFromCwd(file, cwd);
       // Only outside-workspace candidates are filtered: in-workspace paths are
       // always allowed downstream, so noise there cannot cause a prompt.
       if (
@@ -168,7 +167,7 @@ export async function extractBashPathCandidates(
       ) {
         const expanded = await expandCandidate(token, cwd);
         for (const file of expanded) {
-          const abs = resolve(cwd, expandHomePath(file));
+          const abs = resolveFromCwd(file, cwd);
           if (!seen.has(abs)) {
             seen.add(abs);
             results.push(abs);

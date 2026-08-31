@@ -75,6 +75,44 @@ export interface PathAccessConfig {
    */
   allowedPaths?: AllowedPath[];
 }
+export type RootArtifactsMode = "extend" | "replace";
+
+export interface RootArtifactsConfig {
+  /** Enable root-artifact policy evaluation. */
+  enabled?: boolean;
+  /** Whether built-in root files are extended or replaced. */
+  mode?: RootArtifactsMode;
+  /** Exact names or case-insensitive glob patterns allowed at the root. */
+  allow?: string[];
+  /** Exact names or case-insensitive glob patterns denied at the root. */
+  deny?: string[];
+  /** Immediate root directories allowed when set. */
+  allowedDirectories?: string[];
+  /** File patterns hidden from root diagnostics. */
+  ignorePatterns?: string[];
+  /** Additional classifier patterns for obvious trash. */
+  trashPatterns?: string[];
+  /** Additional classifier patterns for likely configuration. */
+  configPatterns?: string[];
+  /** Explicitly opt in to stale allow-entry pruning. */
+  autoPrune?: {
+    enabled?: boolean;
+  };
+}
+
+export interface ResolvedRootArtifactsConfig {
+  enabled: boolean;
+  mode: RootArtifactsMode;
+  allow: string[];
+  deny: string[];
+  allowedDirectories?: string[];
+  ignorePatterns: string[];
+  trashPatterns: string[];
+  configPatterns: string[];
+  autoPrune: {
+    enabled: boolean;
+  };
+}
 
 export interface GuardrailsConfig {
   /** JSON Schema URL for editor autocomplete and validation. Added automatically when Guardrails writes the file. */
@@ -106,6 +144,8 @@ export interface GuardrailsConfig {
   };
   /** Outside-workspace path access settings. */
   pathAccess?: PathAccessConfig;
+  /** Root-level artifact policy. */
+  rootArtifacts?: RootArtifactsConfig;
   // Deprecated. Kept only for migration.
   envFiles?: {
     protectedPatterns?: PatternConfig[];
@@ -142,6 +182,7 @@ export interface ResolvedConfig {
     mode: PathAccessMode;
     allowedPaths: AllowedPath[];
   };
+  rootArtifacts: ResolvedRootArtifactsConfig;
   permissionGate: {
     patterns: DangerousPattern[];
     /** When true, use hardcoded structural matchers for built-in patterns.

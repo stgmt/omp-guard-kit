@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import { vol } from "memfs";
 import { describe, expect, it } from "vitest";
 import { targetsForTool } from "./targets";
@@ -16,7 +15,7 @@ describe("targetsForTool", () => {
 
     await expect(
       targetsForTool("bash", { command: "cat ./README.md" }, cwd),
-    ).resolves.toEqual([join(cwd, "README.md")]);
+    ).resolves.toEqual(["/repo/README.md"]);
   });
 
   it("extracts paths from PowerShell command strings", async () => {
@@ -57,7 +56,7 @@ describe("targetsForTool", () => {
         { command: "awk '/aaa/{flag=1} flag{print}' ./test.txt" },
         cwd,
       ),
-    ).resolves.toEqual([join(cwd, "test.txt")]);
+    ).resolves.toEqual(["/repo/test.txt"]);
   });
 
   it("ignores unrelated tools", async () => {

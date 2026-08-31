@@ -1,5 +1,22 @@
 import { homedir } from "node:os";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { posix, win32 } from "node:path";
+
+function usesWindowsPath(paths: string[]): boolean {
+  const backslash = String.fromCharCode(92);
+  return paths.some((path) => {
+    const drivePath =
+      path.length >= 3 &&
+      path[1] === ":" &&
+      (path[2] === "/" || path[2] === backslash);
+    const uncPath =
+      path.length >= 2 && path[0] === backslash && path[1] === backslash;
+    return drivePath || uncPath;
+  });
+}
+
+function pathApi(...paths: string[]) {
+  return usesWindowsPath(paths) ? win32 : posix;
+}
 
 /**
  * A path grant with an explicit kind.
@@ -21,12 +38,23 @@ export type AllowedPath =
 export function expandHomePath(input: string): string {
   if (input === "~") return homedir();
   if (input.startsWith("~/") || input.startsWith("~\\"))
-    return join(homedir(), input.slice(2));
+    return `${homedir()}/${input.slice(2).replaceAll(String.fromCharCode(92), "/")}`;
   return input;
 }
 
 export function resolveFromCwd(input: string, cwd: string): string {
-  return resolve(cwd, expandHomePath(input));
+  const expanded = expandHomePath(input);
+  if (input === "~" || input.startsWith("~/") || input.startsWith("~\\"))
+    return expanded;
+  const resolved = pathApi(cwd, expanded).resolve(cwd, expanded);
+  if (
+    usesWindowsPath([cwd, input]) &&
+    input.includes("/") &&
+    !input.includes(String.fromCharCode(92))
+  ) {
+    return resolved.replaceAll(String.fromCharCode(92), "/");
+  }
+  return resolved;
 }
 
 /**
@@ -38,8 +66,9 @@ export function isWithinBoundary(
   targetAbsPath: string,
   rootAbsPath: string,
 ): boolean {
-  const rel = relative(rootAbsPath, targetAbsPath);
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  const api = pathApi(targetAbsPath, rootAbsPath);
+  const rel = api.relative(rootAbsPath, targetAbsPath);
+  return rel === "" || (!rel.startsWith("..") && !api.isAbsolute(rel));
 }
 
 /**
@@ -50,15 +79,19 @@ export function isWithinBoundary(
  */
 export function normalizeForDisplay(absPath: string, cwd: string): string {
   const home = homedir();
-  const rel = relative(cwd, absPath);
-  if (rel === "" || (!rel.startsWith("..") && !isAbsolute(rel)))
-    return rel || ".";
+  const api = pathApi(cwd, absPath);
+  const rel = api.relative(cwd, absPath);
+  if (rel === "" || (!rel.startsWith("..") && !api.isAbsolute(rel)))
+    return (rel || ".").replaceAll(String.fromCharCode(92), "/");
+
+  const homeRelative = api.relative(home, absPath);
   if (
-    absPath === home ||
-    absPath.startsWith(`${home}/`) ||
-    absPath.startsWith(`${home}\\`)
+    homeRelative === "" ||
+    (!homeRelative.startsWith("..") && !api.isAbsolute(homeRelative))
   ) {
-    return `~${absPath.slice(home.length)}`;
+    return homeRelative
+      ? `~/${homeRelative.replaceAll(String.fromCharCode(92), "/")}`
+      : "~";
   }
   return absPath;
 }

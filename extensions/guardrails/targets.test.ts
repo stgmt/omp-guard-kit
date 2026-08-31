@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import { vol } from "memfs";
 import { describe, expect, it } from "vitest";
 import { compilePolicies } from "./rules";
@@ -39,9 +38,7 @@ describe("extractTargets", () => {
         cwd,
         policies,
       ),
-    ).resolves.toEqual([
-      { path: join("config", "locked.json"), unresolved: false },
-    ]);
+    ).resolves.toEqual([{ path: "config/locked.json", unresolved: false }]);
   });
 
   it("flags bash targets built from shell variables as unresolved", async () => {

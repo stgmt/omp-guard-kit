@@ -11,4 +11,7 @@ export type {
   PolicyRule,
   Protection,
   ResolvedConfig,
+  ResolvedRootArtifactsConfig,
+  RootArtifactsConfig,
+  RootArtifactsMode,
 } from "./types";

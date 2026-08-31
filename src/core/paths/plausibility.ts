@@ -230,6 +230,7 @@ export function isImplausibleLocalPath(
   absPath: string,
   pathExists: (path: string) => boolean,
 ): boolean {
+  if (/^[A-Za-z]:[\\/]/.test(absPath)) return false;
   if (pathExists(absPath)) return false;
 
   const parent = dirname(absPath);

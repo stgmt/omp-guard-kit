@@ -1,7 +1,4 @@
-import {
-  type ExtensionAPI,
-  isToolCallEventType,
-} from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { checkAction } from "../../src/core";
 import { configLoader } from "../../src/shared/config";
 import {
@@ -38,9 +35,11 @@ export default async function permissionGate(pi: ExtensionAPI) {
   pi.on("tool_call", async (event, ctx) => {
     const config = configLoader.getConfig();
     if (!config.enabled || !config.features.permissionGate) return;
-    if (!isToolCallEventType("bash", event)) return;
+    if (event.toolName !== "bash") return;
 
-    const command = event.input.command;
+    const commandValue = event.input.command;
+    if (typeof commandValue !== "string") return;
+    const command = commandValue;
     const action = { kind: "command" as const, command, origin: "bash" };
     if (isCommandAllowed(command)) return;
 

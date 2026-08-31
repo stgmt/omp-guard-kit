@@ -22,7 +22,7 @@ For a project-specific guard, keep the plugin project-scoped as shown above. Use
 Pi can load the same package from the tagged GitHub release:
 
 ```bash
-pi install https://github.com/stgmt/omp-guard-kit#v0.20.0
+pi install https://github.com/stgmt/omp-guard-kit#v0.21.0
 ```
 
 ## First run
@@ -55,7 +55,7 @@ The public command namespace follows the package name:
 - `/omp-guard-kit:settings` opens the settings editor.
 - `/omp-guard-kit:examples` adds presets without replacing existing settings.
 
-Existing installations can keep using `/guardrails:onboarding`, `/guardrails:settings`, and `/guardrails:examples`. They are compatibility aliases and are marked as legacy in the command palette; use the `omp-guard-kit:` names in new instructions.
+The `omp-guard-kit:` namespace is the only registered public command namespace.
 
 ## Included extensions
 

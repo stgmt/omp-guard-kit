@@ -1,5 +1,11 @@
 # omp-guard-kit
 
+## 0.21.0
+
+### Minor Changes
+
+- 892c213: Remove the obsolete compatibility command registrations and keep only the omp-guard-kit public namespace.
+
 ## 0.20.0
 
 ### Minor Changes

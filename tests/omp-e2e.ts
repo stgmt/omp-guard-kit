@@ -65,9 +65,6 @@ try {
   assert.equal(loaded.extensions.length, 1, "OMP loader did not bind the bundle");
   const registeredCommandNames = [...loaded.extensions[0].commands.keys()].sort();
   assert.deepEqual(registeredCommandNames, [
-    "guardrails:examples",
-    "guardrails:onboarding",
-    "guardrails:settings",
     "omp-guard-kit:examples",
     "omp-guard-kit:onboarding",
     "omp-guard-kit:settings",

@@ -5,14 +5,14 @@ import {
   createOnboardingWizard,
   type OnboardingResult,
 } from "../../components/onboarding-wizard";
-import { registerCommandWithLegacyAlias } from "../registration";
+import { registerGuardKitCommand } from "../registration";
 import { isOnboardingPending, mergeOnboardingConfig } from "./config";
 
 export function registerGuardrailsOnboardingCommand(
   pi: ExtensionAPI,
   onCompleted?: () => void,
 ): void {
-  registerCommandWithLegacyAlias(
+  registerGuardKitCommand(
     pi,
     "onboarding",
     "Run OMP Guard Kit onboarding",

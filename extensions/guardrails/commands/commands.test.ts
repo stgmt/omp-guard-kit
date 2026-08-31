@@ -1,12 +1,9 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it, vi } from "vitest";
-import {
-  LEGACY_GUARDRAILS_COMMANDS,
-  OMP_GUARD_KIT_COMMANDS,
-} from "../../../src/shared/commands";
+import { OMP_GUARD_KIT_COMMANDS } from "../../../src/shared/commands";
 import { registerGuardrailsExamplesCommand } from "./examples";
 import { registerGuardrailsOnboardingCommand } from "./onboarding";
-import { registerCommandWithLegacyAlias } from "./registration";
+import { registerGuardKitCommand } from "./registration";
 import { registerGuardrailsSettings } from "./settings";
 
 type CommandHandler = Parameters<ExtensionAPI["registerCommand"]>[1]["handler"];
@@ -18,7 +15,7 @@ function createCommandRecorder() {
 }
 
 describe("OMP Guard Kit command namespace", () => {
-  it("registers canonical commands and legacy aliases", () => {
+  it("registers canonical commands only", () => {
     const { pi, registerCommand } = createCommandRecorder();
 
     registerGuardrailsOnboardingCommand(pi);
@@ -27,15 +24,12 @@ describe("OMP Guard Kit command namespace", () => {
 
     expect(registerCommand.mock.calls.map(([name]) => name)).toEqual([
       OMP_GUARD_KIT_COMMANDS.onboarding,
-      LEGACY_GUARDRAILS_COMMANDS.onboarding,
       OMP_GUARD_KIT_COMMANDS.settings,
-      LEGACY_GUARDRAILS_COMMANDS.settings,
       OMP_GUARD_KIT_COMMANDS.examples,
-      LEGACY_GUARDRAILS_COMMANDS.examples,
     ]);
   });
 
-  it("marks legacy aliases in command descriptions", () => {
+  it("uses the canonical product descriptions", () => {
     const { pi, registerCommand } = createCommandRecorder();
 
     registerGuardrailsOnboardingCommand(pi);
@@ -47,41 +41,30 @@ describe("OMP Guard Kit command namespace", () => {
     );
     expect(descriptions).toEqual([
       "Run OMP Guard Kit onboarding",
-      "Legacy alias for /omp-guard-kit:onboarding; use the canonical command instead.",
       "Configure OMP Guard Kit settings",
-      "Legacy alias for /omp-guard-kit:settings; use the canonical command instead.",
       "Apply OMP Guard Kit example presets",
-      "Legacy alias for /omp-guard-kit:examples; use the canonical command instead.",
     ]);
   });
-  it("forwards legacy aliases with migration guidance", async () => {
+
+  it("forwards canonical handler arguments and context", async () => {
     const { pi, registerCommand } = createCommandRecorder();
     const handler = vi.fn(
       async (_args: string, _ctx: Parameters<CommandHandler>[1]) => {},
     );
 
-    registerCommandWithLegacyAlias(
-      pi,
-      "settings",
-      "Configure settings",
-      handler,
+    registerGuardKitCommand(pi, "settings", "Configure settings", handler);
+
+    expect(registerCommand).toHaveBeenCalledTimes(1);
+    expect(registerCommand).toHaveBeenCalledWith(
+      OMP_GUARD_KIT_COMMANDS.settings,
+      expect.objectContaining({ description: "Configure settings" }),
     );
 
-    const legacyOptions = registerCommand.mock.calls[1]?.[1] as {
+    const options = registerCommand.mock.calls[0]?.[1] as {
       handler: CommandHandler;
     };
-    const notify = vi.fn();
-    const ctx = {
-      hasUI: true,
-      ui: { notify },
-    } as unknown as Parameters<CommandHandler>[1];
-
-    await legacyOptions.handler("args", ctx);
-
-    expect(notify).toHaveBeenCalledWith(
-      "[OMP Guard Kit] /guardrails:settings is deprecated. Use /omp-guard-kit:settings instead.",
-      "warning",
-    );
+    const ctx = { hasUI: false } as unknown as Parameters<CommandHandler>[1];
+    await options.handler("args", ctx);
     expect(handler).toHaveBeenCalledWith("args", ctx);
   });
 });

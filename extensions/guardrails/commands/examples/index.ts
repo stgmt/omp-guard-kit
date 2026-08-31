@@ -14,7 +14,7 @@ import type { Component } from "@earendil-works/pi-tui";
 import { Key, matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 import type { GuardrailsConfig } from "../../../../src/shared/config";
 import { configLoader } from "../../../../src/shared/config";
-import { registerCommandWithLegacyAlias } from "../registration";
+import { registerGuardKitCommand } from "../registration";
 import {
   appendDangerousPattern,
   appendPolicyRule,
@@ -489,7 +489,7 @@ async function applyExample(
 }
 
 export function registerGuardrailsExamplesCommand(pi: ExtensionAPI): void {
-  registerCommandWithLegacyAlias(
+  registerGuardKitCommand(
     pi,
     "examples",
     "Apply OMP Guard Kit example presets",

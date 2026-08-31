@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Composable Pi and OMP guardrails with deterministic root-artifact protection.",
-    "version": "0.20.0"
+    "version": "0.21.0"
   },
   "plugins": [
     {
       "name": "omp-guard-kit",
       "source": "./",
       "description": "Guardrails for dangerous commands, path access, policies, and unexpected project-root artifacts.",
-      "version": "0.20.0",
+      "version": "0.21.0",
       "author": {
         "name": "stgmt"
       },

@@ -14,11 +14,7 @@ import type {
   SettingItem,
   SettingsListTheme,
 } from "@earendil-works/pi-tui";
-import {
-  LEGACY_GUARDRAILS_COMMANDS,
-  legacyCommandDescription,
-  OMP_GUARD_KIT_COMMANDS,
-} from "../../../../src/shared/commands";
+import { OMP_GUARD_KIT_COMMANDS } from "../../../../src/shared/commands";
 import type {
   AllowedPath,
   DangerousPattern,
@@ -658,10 +654,5 @@ export function registerGuardrailsSettings(
     ...settingsOptions,
     commandName: OMP_GUARD_KIT_COMMANDS.settings,
     commandDescription: "Configure OMP Guard Kit settings",
-  });
-  registerSettingsCommand<GuardrailsConfig, ResolvedConfig>(pi, {
-    ...settingsOptions,
-    commandName: LEGACY_GUARDRAILS_COMMANDS.settings,
-    commandDescription: legacyCommandDescription("settings"),
   });
 }

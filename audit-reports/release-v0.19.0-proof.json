@@ -53,6 +53,8 @@
     "projectRoot": "C:/Users/stigm/AppData/Local/Temp/omp-root-artifacts-plugin-e2e",
     "marketplaceSource": "https://github.com/stgmt/omp-guard-kit",
     "preInstallOldIdentity": "absent: uninstall reported pi-guardrails@stgmt-pi-guardrails is not installed",
+    "oldMarketplaceRemoved": "passed: stgmt-pi-guardrails removed from isolated profile",
+    "postCleanupReinstall": "passed: project-scoped omp-guard-kit 0.19.0 restored",
     "installedPlugin": {
       "id": "omp-guard-kit@omp-guard-kit",
       "scope": "project",
@@ -85,6 +87,7 @@
     "configVersion": "0.19.0",
     "configCommit": "097bd1c",
     "oldPluginRemoval": "passed: project-scoped pi-guardrails@stgmt-pi-guardrails uninstalled",
+    "oldMarketplaceRemoved": "passed: stgmt-pi-guardrails removed from target profile",
     "installedPlugin": {
       "id": "omp-guard-kit@omp-guard-kit",
       "scope": "project",

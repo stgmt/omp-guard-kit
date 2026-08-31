@@ -1,24 +1,30 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { OMP_GUARD_KIT_COMMANDS } from "../../../../src/shared/commands";
 import { configLoader } from "../../../../src/shared/config";
 import {
   createOnboardingWizard,
   type OnboardingResult,
 } from "../../components/onboarding-wizard";
+import { registerCommandWithLegacyAlias } from "../registration";
 import { isOnboardingPending, mergeOnboardingConfig } from "./config";
 
 export function registerGuardrailsOnboardingCommand(
   pi: ExtensionAPI,
   onCompleted?: () => void,
 ): void {
-  pi.registerCommand("guardrails:onboarding", {
-    description: "Run guardrails onboarding",
-    handler: async (_args, ctx) => {
+  registerCommandWithLegacyAlias(
+    pi,
+    "onboarding",
+    "Run OMP Guard Kit onboarding",
+    async (_args, ctx) => {
       if (!ctx.hasUI) return;
 
       const globalConfig = configLoader.getRawConfig("global");
       if (!isOnboardingPending(globalConfig)) {
         ctx.ui.notify(
-          "[Guardrails] onboarding already completed. Use /guardrails:settings to update behavior.",
+          "[OMP Guard Kit] onboarding already completed. Use /" +
+            OMP_GUARD_KIT_COMMANDS.settings +
+            " to update behavior.",
           "info",
         );
         return;
@@ -31,7 +37,7 @@ export function registerGuardrailsOnboardingCommand(
       );
 
       if (!result.completed || result.applyBuiltinDefaults === null) {
-        ctx.ui.notify("[Guardrails] onboarding cancelled.", "warning");
+        ctx.ui.notify("[OMP Guard Kit] onboarding cancelled.", "warning");
         return;
       }
 
@@ -44,7 +50,7 @@ export function registerGuardrailsOnboardingCommand(
       await configLoader.load();
 
       onCompleted?.();
-      ctx.ui.notify("[Guardrails] onboarding completed.", "info");
+      ctx.ui.notify("[OMP Guard Kit] onboarding completed.", "info");
     },
-  });
+  );
 }

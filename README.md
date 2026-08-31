@@ -22,7 +22,7 @@ For a project-specific guard, keep the plugin project-scoped as shown above. Use
 Pi can load the same package from the tagged GitHub release:
 
 ```bash
-pi install https://github.com/stgmt/omp-guard-kit#v0.19.0
+pi install https://github.com/stgmt/omp-guard-kit#v0.20.0
 ```
 
 ## First run
@@ -30,23 +30,32 @@ pi install https://github.com/stgmt/omp-guard-kit#v0.19.0
 After installing, run the onboarding command to choose a starting setup:
 
 ```text
-/guardrails:onboarding
+/omp-guard-kit:onboarding
 ```
 
 
 You can change everything later with:
 
 ```text
-/guardrails:settings
+/omp-guard-kit:settings
 ```
 
 ## What to do first
 
 1. Start OMP from the project directory you want to protect.
-2. Run `/guardrails:onboarding` and choose the protections you want enabled.
-3. Open `/guardrails:settings` whenever you need to change a rule.
-4. Use `/guardrails:examples` to add a preset without replacing existing settings.
+2. Run `/omp-guard-kit:onboarding` and choose the protections you want enabled.
+3. Open `/omp-guard-kit:settings` whenever you need to change a rule.
+4. Use `/omp-guard-kit:examples` to add a preset without replacing existing settings.
 5. Try a harmless write. A disallowed root file is blocked before the tool runs; an allowed nested path continues normally.
+## Command namespace
+
+The public command namespace follows the package name:
+
+- `/omp-guard-kit:onboarding` starts the first-run wizard.
+- `/omp-guard-kit:settings` opens the settings editor.
+- `/omp-guard-kit:examples` adds presets without replacing existing settings.
+
+Existing installations can keep using `/guardrails:onboarding`, `/guardrails:settings`, and `/guardrails:examples`. They are compatibility aliases and are marked as legacy in the command palette; use the `omp-guard-kit:` names in new instructions.
 
 ## Included extensions
 
@@ -60,9 +69,9 @@ Use it to protect files like `.env`, private keys, local credentials, generated 
 Useful commands:
 
 ```text
-/guardrails:settings
-/guardrails:onboarding
-/guardrails:examples
+/omp-guard-kit:settings
+/omp-guard-kit:onboarding
+/omp-guard-kit:examples
 ```
 
 #### Herdr integration
@@ -77,7 +86,7 @@ The `path-access` extension checks tool calls that target paths outside the curr
 
 It can allow, block, or ask before Pi accesses files elsewhere on your machine. In ask mode, you can allow one file or a directory once, for the session, or always.
 
-Granted paths are stored in `pathAccess.allowedPaths` as explicit `{ kind, path }` entries: `file` matches the exact path, `directory` matches the directory and its descendants. Edit them through `/guardrails:settings` (Path Access → Allowed paths, Tab toggles file/directory) or directly in the settings file. Paths support `~/` for home. Existing configs using the legacy string form (trailing `/` for directories) are migrated automatically.
+Granted paths are stored in `pathAccess.allowedPaths` as explicit `{ kind, path }` entries: `file` matches the exact path, `directory` matches the directory and its descendants. Edit them through `/omp-guard-kit:settings` (Path Access → Allowed paths, Tab toggles file/directory) or directly in the settings file. Paths support `~/` for home. Existing configs using the legacy string form (trailing `/` for directories) are migrated automatically.
 
 
 ### permission-gate
@@ -149,7 +158,7 @@ Both events include the same `prompt.id` for correlation.
 Most configuration should happen through the interactive settings UI:
 
 ```text
-/guardrails:settings
+/omp-guard-kit:settings
 ```
 
 Advanced users can edit the settings file directly:
@@ -170,14 +179,14 @@ Choose the settings scope deliberately:
 - A root file is blocked: add its file name to `rootArtifacts.allow`, or use `mode: "replace"` only if you want to maintain the complete file allowlist yourself.
 - A root directory is blocked: add the directory name to `rootArtifacts.allowedDirectories`. Adding a nested path to `allow` does not allow its parent directory.
 - A command is blocked as unresolved: shell variables and command substitutions cannot be proven safe; use a concrete path or keep the command blocked.
-- To see the current settings and edit them interactively, run `/guardrails:settings`. The guard emits a diagnostic event when it scans the project or blocks a write.
+- To see the current settings and edit them interactively, run `/omp-guard-kit:settings`. The guard emits a diagnostic event when it scans the project or blocks a write.
 
 ## Examples
 
 Use the examples command to add common policy and command presets without replacing your existing config:
 
 ```text
-/guardrails:examples
+/omp-guard-kit:examples
 ```
 
 

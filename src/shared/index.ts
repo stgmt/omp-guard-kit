@@ -1,3 +1,4 @@
+export * from "./commands";
 export * from "./config";
 export * from "./events";
 export * from "./glob";

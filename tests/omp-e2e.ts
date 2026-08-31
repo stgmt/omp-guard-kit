@@ -63,6 +63,15 @@ try {
   const loaded = await loadExtensions([extensionPath], projectRoot, eventBus);
   assert.equal(loaded.errors.length, 0, JSON.stringify(loaded.errors));
   assert.equal(loaded.extensions.length, 1, "OMP loader did not bind the bundle");
+  const registeredCommandNames = [...loaded.extensions[0].commands.keys()].sort();
+  assert.deepEqual(registeredCommandNames, [
+    "guardrails:examples",
+    "guardrails:onboarding",
+    "guardrails:settings",
+    "omp-guard-kit:examples",
+    "omp-guard-kit:onboarding",
+    "omp-guard-kit:settings",
+  ]);
 
   const sessionManager = SessionManager.inMemory(projectRoot);
   const modelRegistry = { getAvailable: () => [] };
@@ -73,6 +82,9 @@ try {
     sessionManager,
     modelRegistry,
   );
+  for (const commandName of registeredCommandNames) {
+    assert.equal(runner.getCommand(commandName)?.name, commandName);
+  }
 
   await runner.emitBeforeAgentStart("compatibility probe", undefined, ["system"]);
   await runner.emit({ type: "session_start" });

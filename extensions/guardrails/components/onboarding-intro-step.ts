@@ -1,6 +1,9 @@
 import type { Component } from "@earendil-works/pi-tui";
 import { Key, matchesKey, Text } from "@earendil-works/pi-tui";
 
+import { OMP_GUARD_KIT_COMMANDS } from "../../../src/shared/commands";
+
+const SETTINGS_COMMAND = `/${OMP_GUARD_KIT_COMMANDS.settings}`;
 export class OnboardingIntroStep implements Component {
   private readonly introText = new Text("", 2, 0);
 
@@ -12,7 +15,9 @@ export class OnboardingIntroStep implements Component {
 
   render(width: number): string[] {
     this.introText.setText(
-      "Guardrails helps prevent accidental exposure of secrets and risky actions.\n\nIt gives you two protections:\n- Policies: file access rules (`noAccess` or `readOnly`)\n- Permission gate: confirmation before dangerous commands run\n\nYou are choosing the starting defaults now. You can change them later in `/guardrails:settings`.",
+      "Guardrails helps prevent accidental exposure of secrets and risky actions.\n\nIt gives you two protections:\n- Policies: file access rules (`noAccess` or `readOnly`)\n- Permission gate: confirmation before dangerous commands run\n\nYou are choosing the starting defaults now. You can change them later in `" +
+        SETTINGS_COMMAND +
+        "`.",
     );
 
     return [

@@ -14,6 +14,7 @@ import type { Component } from "@earendil-works/pi-tui";
 import { Key, matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
 import type { GuardrailsConfig } from "../../../../src/shared/config";
 import { configLoader } from "../../../../src/shared/config";
+import { registerCommandWithLegacyAlias } from "../registration";
 import {
   appendDangerousPattern,
   appendPolicyRule,
@@ -488,14 +489,16 @@ async function applyExample(
 }
 
 export function registerGuardrailsExamplesCommand(pi: ExtensionAPI): void {
-  pi.registerCommand("guardrails:examples", {
-    description: "Apply guardrails example presets",
-    handler: async (_args, ctx) => {
+  registerCommandWithLegacyAlias(
+    pi,
+    "examples",
+    "Apply OMP Guard Kit example presets",
+    async (_args, ctx) => {
       if (!ctx.hasUI) return;
 
       const scopes = getExampleScopes();
       if (scopes.length === 0) {
-        ctx.ui.notify("[Guardrails] no config scopes available.", "error");
+        ctx.ui.notify("[OMP Guard Kit] no config scopes available.", "error");
         return;
       }
 
@@ -506,15 +509,15 @@ export function registerGuardrailsExamplesCommand(pi: ExtensionAPI): void {
       );
 
       if (!result.applied) {
-        ctx.ui.notify("[Guardrails] no examples applied.", "warning");
+        ctx.ui.notify("[OMP Guard Kit] no examples applied.", "warning");
         return;
       }
 
       await applyExample(result);
       ctx.ui.notify(
-        `[Guardrails] examples applied to ${result.state.scope}.`,
+        `[OMP Guard Kit] examples applied to ${result.state.scope}.`,
         "info",
       );
     },
-  });
+  );
 }

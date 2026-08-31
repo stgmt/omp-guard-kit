@@ -2,7 +2,10 @@ import { getSettingsTheme, type SettingsTheme } from "@aliou/pi-utils-settings";
 import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
 import type { Component } from "@earendil-works/pi-tui";
 import { Box, Key, Markdown, matchesKey } from "@earendil-works/pi-tui";
+import { OMP_GUARD_KIT_COMMANDS } from "../../../src/shared/commands";
 import type { OnboardingState } from "./onboarding-types";
+
+const SETTINGS_COMMAND = `/${OMP_GUARD_KIT_COMMANDS.settings}`;
 
 abstract class OnboardingChoiceStep implements Component {
   private selectedIndex = 0;
@@ -98,8 +101,8 @@ export class OnboardingDefaultsChoiceStep extends OnboardingChoiceStep {
       [
         "Start with no built-in file policy defaults.",
         "",
-        "- Configure your own policies in `/guardrails:settings`",
-        "- Browse policy and command examples in `/guardrails:settings`",
+        `- Configure your own policies in ${SETTINGS_COMMAND}`,
+        `- Browse policy and command examples in ${SETTINGS_COMMAND}`,
       ].join("\n"),
     ];
   }
@@ -133,7 +136,7 @@ export class OnboardingPathAccessStep extends OnboardingChoiceStep {
       [
         "The agent can access any path on your system without prompting.",
         "",
-        "- You can enable path access later in `/guardrails:settings`",
+        `- You can enable path access later in \`${SETTINGS_COMMAND}\``,
       ].join("\n"),
     ];
   }

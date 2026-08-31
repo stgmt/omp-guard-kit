@@ -1,5 +1,12 @@
 # omp-guard-kit
 
+## 0.20.0
+
+### Minor Changes
+
+- Add the canonical /omp-guard-kit:onboarding, /omp-guard-kit:settings, and /omp-guard-kit:examples commands so the public slash-command namespace matches the package identity.
+- Keep /guardrails:onboarding, /guardrails:settings, and /guardrails:examples as marked legacy aliases for one migration cycle.
+
 ## 0.19.0
 
 ### Breaking Changes

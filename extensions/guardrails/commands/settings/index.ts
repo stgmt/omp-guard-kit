@@ -3,6 +3,7 @@ import {
   getNestedValue,
   registerSettingsCommand,
   type Scope,
+  type SettingsCommandOptions,
   SettingsDetailEditor,
   type SettingsDetailField,
   type SettingsSection,
@@ -13,6 +14,11 @@ import type {
   SettingItem,
   SettingsListTheme,
 } from "@earendil-works/pi-tui";
+import {
+  LEGACY_GUARDRAILS_COMMANDS,
+  legacyCommandDescription,
+  OMP_GUARD_KIT_COMMANDS,
+} from "../../../../src/shared/commands";
 import type {
   AllowedPath,
   DangerousPattern,
@@ -286,9 +292,11 @@ export function registerGuardrailsSettings(
   pi: ExtensionAPI,
   options: RegisterGuardrailsSettingsOptions = {},
 ): void {
-  registerSettingsCommand<GuardrailsConfig, ResolvedConfig>(pi, {
-    commandName: "guardrails:settings",
-    title: "Guardrails Settings",
+  const settingsOptions: Omit<
+    SettingsCommandOptions<GuardrailsConfig, ResolvedConfig>,
+    "commandName" | "commandDescription"
+  > = {
+    title: "OMP Guard Kit Settings",
     configStore: createSettingsConfigStore(),
     buildSections: (
       tabConfig: GuardrailsConfig | null,
@@ -644,5 +652,16 @@ export function registerGuardrailsSettings(
       // Fall through to default string storage for enums (pathAccess.mode, etc.)
       return null;
     },
+  };
+
+  registerSettingsCommand<GuardrailsConfig, ResolvedConfig>(pi, {
+    ...settingsOptions,
+    commandName: OMP_GUARD_KIT_COMMANDS.settings,
+    commandDescription: "Configure OMP Guard Kit settings",
+  });
+  registerSettingsCommand<GuardrailsConfig, ResolvedConfig>(pi, {
+    ...settingsOptions,
+    commandName: LEGACY_GUARDRAILS_COMMANDS.settings,
+    commandDescription: legacyCommandDescription("settings"),
   });
 }

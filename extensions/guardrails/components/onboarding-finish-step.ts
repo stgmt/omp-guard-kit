@@ -1,6 +1,10 @@
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import type { Component } from "@earendil-works/pi-tui";
 import { Key, Markdown, matchesKey } from "@earendil-works/pi-tui";
+import { OMP_GUARD_KIT_COMMANDS } from "../../../src/shared/commands";
+
+const SETTINGS_COMMAND = `/${OMP_GUARD_KIT_COMMANDS.settings}`;
+
 import type { OnboardingState } from "./onboarding-types";
 
 export class OnboardingFinishStep implements Component {
@@ -31,7 +35,7 @@ export class OnboardingFinishStep implements Component {
             "",
             "No built-in file policy defaults will be applied.",
             "",
-            "You can configure policies later with `/guardrails:settings`.",
+            `You can configure policies later with \`${SETTINGS_COMMAND}\`.`,
           ].join("\n");
 
     const pathAccessPart = this.state.pathAccessEnabled

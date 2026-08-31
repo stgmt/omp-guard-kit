@@ -1,0 +1,137 @@
+{
+  "release": {
+    "repository": "stgmt/omp-repo-guard",
+    "tag": "v0.18.0",
+    "commit": "0c218b9fbab2a0359fd5fb2f9da550bcfb94fbb5",
+    "releaseUrl": "https://github.com/stgmt/omp-repo-guard/releases/tag/v0.18.0",
+    "package": {
+      "name": "@stgmt/pi-guardrails",
+      "version": "0.18.0",
+      "ompExtension": "./dist/extension.js",
+      "marketplace": "stgmt-pi-guardrails",
+      "plugin": "pi-guardrails"
+    },
+    "tagPayload": [
+      {
+        "path": "package.json",
+        "bytes": 3001,
+        "sha256": "a04d151371feb90d49655b01b0d01ad2e0a4fbb694cc1dd4b1186ca30600d259"
+      },
+      {
+        "path": ".omp-plugin/marketplace.json",
+        "bytes": 761,
+        "sha256": "781ae7775b9c5c2ac22c380235b528081033a856fab5fd648526020119389b1d"
+      },
+      {
+        "path": "dist/extension.js",
+        "bytes": 6323474,
+        "sha256": "0f2c6c1b85025e2222fc50e2fe7a785973f763adcabc3b10bf889f2e602728b7"
+      }
+    ],
+    "installedPayloadMatchesTag": true
+  },
+  "checks": {
+    "pnpm install --frozen-lockfile --ignore-scripts": "passed",
+    "pnpm run lint": "passed: Checked 99 files in 83ms. No fixes applied.",
+    "pnpm run typecheck": "passed",
+    "pnpm run check:schema": "passed: schema.json is up to date.",
+    "pnpm run test": "passed: 29 files, 487 tests",
+    "pnpm run test:mutation": "passed: 1 file, 15 tests",
+    "pnpm run build": "passed: dist/extension.js, 6323474 bytes",
+    "pnpm run test:e2e": "passed: active OMP loader and runner, blocked root writes, allowed nested write"
+  },
+  "mutationCases": [
+    "echo redirect",
+    "printf redirect",
+    "cat redirect",
+    "tee",
+    "touch",
+    "mkdir",
+    "cp",
+    "mv",
+    "install",
+    "nested sh -c",
+    "subshell",
+    "input and output redirects",
+    "chained redirects",
+    "pipeline tee",
+    "unresolved shell destination",
+    "project-boundary escape"
+  ],
+  "isolatedProfile": {
+    "profile": "root-artifacts-release-proof",
+    "projectRoot": "C:/Users/stigm/AppData/Local/Temp/omp-root-artifacts-plugin-e2e",
+    "marketplaceSource": "https://github.com/stgmt/omp-repo-guard",
+    "installedPlugin": {
+      "id": "pi-guardrails@stgmt-pi-guardrails",
+      "scope": "project",
+      "version": "0.18.0",
+      "installPath": "C:/Users/stigm/.omp/profiles/root-artifacts-release-proof/plugins/cache/plugins/stgmt-pi-guardrails___pi-guardrails___0.18.0"
+    },
+    "postInstallList": {
+      "npm": [],
+      "marketplace": ["pi-guardrails@stgmt-pi-guardrails"]
+    },
+    "postInstallDoctor": {
+      "errors": [],
+      "observations": [
+        "plugins_directory: ok",
+        "package_manifest: warning, not created yet",
+        "node_modules: warning, missing (run npm install in plugins dir)"
+      ]
+    },
+    "uninstallFreshProcessList": {
+      "npm": [],
+      "marketplace": []
+    },
+    "reinstall": "passed: project-scoped pi-guardrails 0.18.0 restored",
+    "installedRunnerProof": {
+      "loader": "omp.loadExtensions",
+      "runner": "ExtensionRunner.emitToolCall",
+      "blocked": ["unexpected.txt", "blocked.txt"],
+      "allowed": "src/allowed.txt",
+      "diagnostics": 3
+    },
+    "freshOmpCli": "started a fresh process; stopped with no models available before a model request"
+  },
+  "targetProject": {
+    "projectRoot": "E:/repos/omp-spec-kit",
+    "configPath": ".pi/extensions/guardrails.json",
+    "configCommit": "6756e03b24a92274d0ece8ca46c3dc9408d319da",
+    "pluginList": {
+      "existingNpmPlugins": [
+        "omp-dynamic-workflows@0.1.0",
+        "omp-plan-kit@1.0.1",
+        "omp-spec-kit@0.3.2"
+      ],
+      "marketplacePlugins": [
+        "omp-spec-kit@omp-spec-kit@0.3.2",
+        "pi-guardrails@stgmt-pi-guardrails@0.18.0"
+      ]
+    },
+    "doctor": {
+      "errors": [],
+      "okPlugins": [
+        "omp-dynamic-workflows@0.1.0",
+        "omp-plan-kit@1.0.1",
+        "omp-spec-kit@0.3.2"
+      ],
+      "preexistingWarnings": [
+        "orphan:omp-extension-probe",
+        "orphan:claude-plugin-probe",
+        "orphan:omp-cwd-probe-2"
+      ]
+    },
+    "runnerProof": {
+      "loadedExtensions": 2,
+      "loader": "omp.loadExtensions",
+      "runner": "ExtensionRunner.emitToolCall",
+      "blockedRootFiles": ["unexpected.txt", "blocked.txt"],
+      "allowedNestedFile": "src/.omp-root-guard-proof.txt",
+      "diagnostics": 3,
+      "rootMarkerPresentAfterCleanup": false,
+      "nestedMarkerPresentAfterCleanup": false,
+      "existingOmpSpecKitStillLoaded": true
+    }
+  }
+}

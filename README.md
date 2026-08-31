@@ -1,29 +1,28 @@
-![banner](https://assets.aliou.me/github/aliou/pi-guardrails/banner.png)
 
-# Guardrails
+# OMP Guard Kit
 
-Guardrails adds safety checks to Pi so agents are less likely to read secrets, write protected files, access paths outside the workspace, or run dangerous shell commands by accident.
+OMP Guard Kit adds safety checks to Pi so agents are less likely to read secrets, write protected files, access paths outside the workspace, or run dangerous shell commands by accident.
 
 This package installs five Pi/OMP extensions:
 
 - **guardrails** for file protection policies, settings, onboarding, and examples.
 - **path-access** for controlling access outside the current workspace.
 - **permission-gate** for confirming or blocking risky shell commands.
-- **herdr** for reporting Guardrails approval prompts to Herdr.
+- **herdr** for reporting OMP Guard Kit approval prompts to Herdr.
 - **root-artifacts** for deterministic protection of unexpected project-root files and directories.
 ## Install
 
 For OMP, add the GitHub marketplace and install the pinned release:
 
 ```bash
-omp plugin marketplace add https://github.com/stgmt/omp-repo-guard
-omp plugin install pi-guardrails@stgmt-pi-guardrails
+omp plugin marketplace add https://github.com/stgmt/omp-guard-kit
+omp plugin install omp-guard-kit@omp-guard-kit
 ```
 
 Pi can load the same package from the tagged GitHub release:
 
 ```bash
-pi install https://github.com/stgmt/omp-repo-guard#v0.18.0
+pi install https://github.com/stgmt/omp-guard-kit#v0.19.0
 ```
 
 ## First run
@@ -34,7 +33,6 @@ After installing, run the onboarding command to choose a starting setup:
 /guardrails:onboarding
 ```
 
-[![Guardrails onboarding walkthrough](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/onboarding.gif)](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/onboarding.mp4)
 
 You can change everything later with:
 
@@ -50,7 +48,6 @@ The `guardrails` extension owns file protection policies and the user-facing com
 
 Use it to protect files like `.env`, private keys, local credentials, generated logs, database dumps, or any project-specific path you do not want Pi to read or modify without clear intent.
 
-[![Guardrails policies and settings walkthrough](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/policies.gif)](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/policies.mp4)
 
 Useful commands:
 
@@ -62,7 +59,7 @@ Useful commands:
 
 #### Herdr integration
 
-The included Herdr adapter reports active Guardrails approval prompts through Herdr's `herdr:blocked` event. Herdr can then show the Pi pane as blocked while it waits for a permission-gate or path-access decision.
+The included Herdr adapter reports active OMP Guard Kit approval prompts through Herdr's `herdr:blocked` event. Herdr can then show the Pi pane as blocked while it waits for a permission-gate or path-access decision.
 
 The adapter has no configuration or direct Herdr dependency. Its emitted events have no effect unless Herdr's Pi integration is active.
 
@@ -74,7 +71,6 @@ It can allow, block, or ask before Pi accesses files elsewhere on your machine. 
 
 Granted paths are stored in `pathAccess.allowedPaths` as explicit `{ kind, path }` entries: `file` matches the exact path, `directory` matches the directory and its descendants. Edit them through `/guardrails:settings` (Path Access → Allowed paths, Tab toggles file/directory) or directly in the settings file. Paths support `~/` for home. Existing configs using the legacy string form (trailing `/` for directories) are migrated automatically.
 
-[![Guardrails path access prompt walkthrough](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/path-access.gif)](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/path-access.mp4)
 
 ### permission-gate
 
@@ -82,7 +78,6 @@ The `permission-gate` extension detects dangerous bash commands before they run.
 
 It catches built-in risky patterns like recursive deletes, privileged commands, disk formatting, broad permission changes, and configured custom patterns. You can allow once, allow for the session, deny, decline and stop (which also aborts the current turn), or configure auto-deny rules.
 
-[![Guardrails permission gate walkthrough](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/permission-gate.gif)](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/permission-gate.mp4)
 ### root-artifacts
 
 The `root-artifacts` extension is disabled by default and only activates from a project-local `.pi/extensions/guardrails.json` with `rootArtifacts.enabled: true`. It checks write/edit tool calls before execution and blocks root files outside the configured allowlist, root directories outside `allowedDirectories`, unresolved shell destinations, and paths that escape the project.
@@ -93,9 +88,9 @@ Relevant configuration fields are `mode` (`extend` or `replace`), `allow`, `deny
 
 ## Extension events
 
-Guardrails emits paired prompt lifecycle events on Pi's shared event bus:
+OMP Guard Kit emits paired prompt lifecycle events on Pi's shared event bus:
 
-- `guardrails:prompt:opened` when an interactive Guardrails prompt starts waiting for input.
+- `guardrails:prompt:opened` when an interactive OMP Guard Kit prompt starts waiting for input.
 - `guardrails:prompt:closed` when that prompt stops waiting, including when the UI throws.
 
 Both events include the same `prompt.id` for correlation.
@@ -113,7 +108,7 @@ Advanced users can edit the settings file directly:
 - Global: `~/.pi/agent/extensions/guardrails.json`
 - Project: `.pi/extensions/guardrails.json`
 
-Guardrails writes a `$schema` field to saved settings files, so modern editors provide autocomplete and validation. The generated schema is committed at [`schema.json`](schema.json).
+OMP Guard Kit writes a `$schema` field to saved settings files, so modern editors provide autocomplete and validation. The generated schema is committed at [`schema.json`](schema.json).
 
 ## Examples
 
@@ -123,23 +118,22 @@ Use the examples command to add common policy and command presets without replac
 /guardrails:examples
 ```
 
-[![Guardrails examples command walkthrough](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/examples.gif)](https://assets.aliou.me/github/aliou/pi-guardrails/v0.12.0/examples.mp4)
 
 The available presets live in [`extensions/guardrails/commands/settings/examples.ts`](extensions/guardrails/commands/settings/examples.ts).
 
 ## Similar but different
 
-Pi is designed to make agent safety extensible. Guardrails focuses on deterministic, configurable file policies, outside-workspace path access, and dangerous-command prompts. Other packages tend to fall into two useful groups.
+Pi is designed to make agent safety extensible. OMP Guard Kit focuses on deterministic, configurable file policies, outside-workspace path access, and dangerous-command prompts. Other packages tend to fall into two useful groups.
 
 See [pi.dev/packages](https://pi.dev/packages) for the full registry of Pi extensions.
 
 ### Make one yourself!
 
-If Guardrails or the alternatives below do not fit your needs, you can also make your own. Start from the [Pi permission gate example](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/permission-gate.ts), then ask Pi to customize it for your workflow.
+If OMP Guard Kit or the alternatives below do not fit your needs, you can also make your own. Start from the [Pi permission gate example](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/permission-gate.ts), then ask Pi to customize it for your workflow.
 
 ### Permission and policy gates
 
-These packages add checks around tool calls before they run. They are closest to Guardrails when you want policy enforcement without changing where Pi executes.
+These packages add checks around tool calls before they run. They are closest to OMP Guard Kit when you want policy enforcement without changing where Pi executes.
 
 - [@gotgenes/pi-permission-system](https://pi.dev/packages/%40gotgenes/pi-permission-system): broad permission enforcement for Pi tool calls.
 - [@vtstech/pi-security](https://pi.dev/packages/%40vtstech/pi-security): command, path, network, mode, and audit controls.

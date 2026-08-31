@@ -1,4 +1,4 @@
-# pi-guardrails
+# omp-guard-kit
 
 Public Pi extension providing security hooks to prevent potentially dangerous operations. People could be using this, so consider backwards compatibility when making changes.
 

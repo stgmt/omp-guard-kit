@@ -1,24 +1,24 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "stgmt-pi-guardrails",
+  "name": "omp-guard-kit",
   "owner": {
     "name": "stgmt"
   },
   "metadata": {
     "description": "Composable Pi and OMP guardrails with deterministic root-artifact protection.",
-    "version": "0.18.0"
+    "version": "0.19.0"
   },
   "plugins": [
     {
-      "name": "pi-guardrails",
+      "name": "omp-guard-kit",
       "source": "./",
       "description": "Guardrails for dangerous commands, path access, policies, and unexpected project-root artifacts.",
-      "version": "0.18.0",
+      "version": "0.19.0",
       "author": {
         "name": "stgmt"
       },
-      "homepage": "https://github.com/stgmt/omp-repo-guard",
-      "repository": "https://github.com/stgmt/omp-repo-guard.git",
+      "homepage": "https://github.com/stgmt/omp-guard-kit",
+      "repository": "https://github.com/stgmt/omp-guard-kit.git",
       "license": "MIT",
       "category": "development"
     }

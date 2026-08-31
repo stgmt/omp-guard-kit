@@ -1,4 +1,4 @@
-# @aliou/pi-guardrails
+# omp-guard-kit
 
 ## 0.17.1
 

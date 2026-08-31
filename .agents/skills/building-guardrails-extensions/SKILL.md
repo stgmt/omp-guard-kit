@@ -1,11 +1,11 @@
 ---
 name: building-guardrails-extensions
-description: "Builds new pi-guardrails feature extensions using the core/shared split. Use when adding guardrails features such as zones, policy engines, path controls, permission gates, or new Pi hooks in this repository."
+description: "Builds new omp-guard-kit feature extensions using the core/shared split. Use when adding guardrails features such as zones, policy engines, path controls, permission gates, or new Pi hooks in this repository."
 ---
 
 # Building Guardrails Extensions
 
-Use this when adding a new feature extension to `@aliou/pi-guardrails`.
+Use this when adding a new feature extension to `omp-guard-kit`.
 
 ## Architecture rules
 

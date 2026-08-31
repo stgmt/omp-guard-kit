@@ -1,7 +1,7 @@
 # OMP extension contract audit
 
 Date: 2026-08-31
-Repository: `stgmt/omp-repo-guard`
+Repository: `stgmt/omp-guard-kit`
 Source baseline: `aliou/pi-guardrails` tag `v0.17.1` (`bec4c8be8ed93cf9ba28e3034ec8553e0b5cea6c`)
 Active OMP: `omp/18.0.10`
 

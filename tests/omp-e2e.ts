@@ -58,7 +58,8 @@ try {
     diagnostics.push(data);
   });
 
-  const extensionPath = join(repoRoot, "dist", "extension.js");
+  const extensionPath =
+    process.env.OMP_EXTENSION_PATH ?? join(repoRoot, "dist", "extension.js");
   assert.equal(existsSync(extensionPath), true, "compiled OMP extension is missing");
   const loaded = await loadExtensions([extensionPath], projectRoot, eventBus);
   assert.equal(loaded.errors.length, 0, JSON.stringify(loaded.errors));

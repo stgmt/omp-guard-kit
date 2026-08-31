@@ -1,0 +1,67 @@
+{
+  "release": {
+    "repository": "stgmt/omp-guard-kit",
+    "tag": "v0.21.0",
+    "commit": "a4f12659f234f2671ef1d7b89c09cd2dc2dfc445",
+    "releaseUrl": "https://github.com/stgmt/omp-guard-kit/releases/tag/v0.21.0",
+    "publishedAt": "2026-08-31T21:47:19Z",
+    "targetCommitish": "main",
+    "draft": false,
+    "prerelease": false,
+    "assets": 0,
+    "package": {
+      "name": "omp-guard-kit",
+      "version": "0.21.0",
+      "ompExtensions": ["./dist/extension.js"]
+    },
+    "tagArchiveSha256": "1a72df4f7ff3cd150fd7fac789fcc90a7f71ba76334887210532958818ab8370",
+    "packageArchive": {
+      "name": "omp-guard-kit-0.21.0.tgz",
+      "bytes": 1644412,
+      "sha256": "22ba1cf921f02921f6e7796935c9526b1179162d50dc467a2490d5ebfeb0b9b8"
+    },
+    "payloadSha256": {
+      "packageJson": "b6eb36ba3d49801778d2f4d25268462a15146ea40fc32b362ff8856a35912b75",
+      "marketplace": "9d9709a4c8f9ac54fe9943b7de785cfc4b819ad9f5c47755b3cd01f3b711d51d",
+      "dist": "1edb766bc513a1f2f9e89df180df60bf33d499c6c55be3fdc7565ed4e2abc08a"
+    },
+    "installedPayloadMatchesTag": true,
+    "installedPath": "C:/Users/stigm/.omp/plugins/cache/plugins/omp-guard-kit___omp-guard-kit___0.21.0"
+  },
+  "commands": {
+    "registered": [
+      "omp-guard-kit:examples",
+      "omp-guard-kit:onboarding",
+      "omp-guard-kit:settings"
+    ],
+    "previousNamespaceResolution": "all three lookups returned undefined",
+    "loader": "omp.loadExtensions",
+    "runner": "ExtensionRunner.getCommand"
+  },
+  "checks": {
+    "pnpm install --frozen-lockfile --ignore-scripts": "passed",
+    "pnpm run lint": "passed",
+    "pnpm run typecheck": "passed",
+    "pnpm run check:schema": "passed",
+    "pnpm run test": "passed: 30 files, 490 tests",
+    "pnpm run test:mutation": "passed: 15 tests",
+    "pnpm run build": "passed: dist/extension.js",
+    "sourceBundleE2E": "passed: real OMP loader/runner and root-artifact block/allow behavior",
+    "installedBundleE2E": "passed: full test:e2e with OMP_EXTENSION_PATH pointing to installed v0.21.0",
+    "packedBundleE2E": "passed: pnpm pack, tar extraction, and full test:e2e",
+    "rollbackE2E": "passed: isolated project install, uninstall, reinstall, doctor, and E2E"
+  },
+  "targetProject": {
+    "projectRoot": "E:/repos/omp-spec-kit",
+    "installedVersion": "0.21.0",
+    "lockVersion": "0.21.0",
+    "activePreviousNamespaceReferences": 0,
+    "loaderE2E": "passed: exactly three canonical commands; previous namespace unregistered",
+    "doctor": "passed with three unrelated pre-existing orphan-plugin warnings",
+    "unrelatedTrackedChangesPreserved": true
+  },
+  "scope": {
+    "mcp": "not applicable: package contains no .mcp.json or dist/mcp/server.js",
+    "npmPublish": "not performed; release and installation use GitHub/OMP marketplace"
+  }
+}

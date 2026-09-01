@@ -44,6 +44,9 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build and verify OMP bundle
+        env:
+          OMP_RUNTIME_ROOT: node_modules/@earendil-works/pi-coding-agent
+          OMP_RUNTIME_DIST: "true"
         run: |
           pnpm build
           test -s dist/extension.js

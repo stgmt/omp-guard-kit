@@ -9,8 +9,20 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const runtimeRoot =
   process.env.OMP_RUNTIME_ROOT ??
   "C:/Users/stigm/.omp/plugins/node_modules/@oh-my-pi/pi-coding-agent";
-const runtimeModule = (relativePath: string) =>
-  import(pathToFileURL(join(runtimeRoot, relativePath)).href);
+const runtimeModule = (relativePath: string) => {
+  const packagedRuntimePaths: Record<string, string> = {
+    "src/extensibility/extensions/loader.ts": "dist/core/extensions/loader.js",
+    "src/extensibility/extensions/runner.ts": "dist/core/extensions/runner.js",
+    "src/utils/event-bus.ts": "dist/core/event-bus.js",
+    "src/session/session-manager.ts": "dist/core/session-manager.js",
+  };
+  const resolvedPath =
+    process.env.OMP_RUNTIME_DIST === "true"
+      ? packagedRuntimePaths[relativePath]
+      : relativePath;
+  if (!resolvedPath) throw new Error(`No packaged runtime mapping for ${relativePath}`);
+  return import(pathToFileURL(join(runtimeRoot, resolvedPath)).href);
+};
 const originalCwd = process.cwd();
 
 const projectRoot = await mkdtemp(join(tmpdir(), "omp-root-artifacts-e2e-"));

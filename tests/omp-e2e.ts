@@ -56,16 +56,21 @@ await writeFile(
 );
 
 process.chdir(projectRoot);
-const [{ loadExtensions }, { ExtensionRunner }, { EventBus }, { SessionManager }] =
+const [loaderModule, runnerModule, eventBusModule, sessionModule] =
   await Promise.all([
     runtimeModule("src/extensibility/extensions/loader.ts"),
     runtimeModule("src/extensibility/extensions/runner.ts"),
     runtimeModule("src/utils/event-bus.ts"),
     runtimeModule("src/session/session-manager.ts"),
   ]);
+const { loadExtensions } = loaderModule;
+const { ExtensionRunner } = runnerModule;
+const { EventBus, createEventBus } = eventBusModule;
+const { SessionManager } = sessionModule;
 
 async function loadNativeExtension() {
-  const eventBus = new EventBus();
+  const eventBus = EventBus ? new EventBus() : createEventBus?.();
+  if (!eventBus) throw new Error("Runtime does not expose an event bus");
   const diagnostics: unknown[] = [];
   eventBus.on("guardrails:root-artifacts:diagnostic", (data: unknown) => {
     diagnostics.push(data);

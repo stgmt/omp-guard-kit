@@ -35,8 +35,16 @@ jobs:
           node-version: "24"
           cache: "pnpm"
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build and verify OMP bundle
+        run: |
+          pnpm build
+          git diff --exit-code -- dist/extension.js
 
       - name: Get release info
         id: release-info

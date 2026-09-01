@@ -22,7 +22,7 @@ For a project-specific guard, keep the plugin project-scoped as shown above. Use
 Pi can load the same package from the tagged GitHub release:
 
 ```bash
-pi install https://github.com/stgmt/omp-guard-kit#v0.22.0
+pi install https://github.com/stgmt/omp-guard-kit#v0.22.1
 ```
 
 ## First run

@@ -258,6 +258,20 @@ describe("guardrails config persistence", () => {
     expect(existsSync(join(cwd, ".pi"))).toBe(false);
   });
 
+  it("migrates a custom Pi global agent directory", async () => {
+    vi.stubEnv("PI_CODING_AGENT_DIR", join(home, "custom-pi-agent"));
+    const source = join(home, "custom-pi-agent", "extensions/guardrails.json");
+    const destination = globalPath(".omp");
+    vol.fromJSON({ [source]: JSON.stringify(config({ enabled: false })) });
+    const loader = createGuardrailsConfigLoader("omp", { cwd, home });
+
+    await loader.load();
+
+    expect(existsSync(source)).toBe(false);
+    expect(existsSync(destination)).toBe(true);
+    expect(loader.getRawConfig("global")).toMatchObject({ enabled: false });
+  });
+
   it("rejects switching the singleton after it has loaded", async () => {
     configureConfigRuntime("pi");
     vol.fromJSON({ [join(cwd, ".pi", ".keep")]: "" });

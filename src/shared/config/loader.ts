@@ -349,8 +349,8 @@ class GuardrailsConfigLoader {
       ]);
     }
     candidates.push([
-      resolve(this.home, ".pi/agent/extensions/guardrails.json"),
-      resolve(this.home, ".omp/agent/extensions/guardrails.json"),
+      configPath("pi", "global", this.cwd, this.home) as string,
+      this.globalPath,
     ]);
     const seen = new Set<string>();
     for (const [source, destination] of candidates) {

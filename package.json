@@ -1,6 +1,6 @@
 {
   "name": "omp-guard-kit",
-  "version": "0.22.0",
+  "version": "0.22.1",
   "description": "Composable Pi and OMP guardrails with deterministic root-artifact protection.",
   "license": "MIT",
   "type": "module",
@@ -76,8 +76,8 @@
   "scripts": {
     "build": "bun build extensions/omp.ts --outfile dist/extension.js --target bun --format esm --minify",
     "typecheck": "tsc --noEmit",
-    "gen:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.22.0",
-    "check:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.22.0 --check",
+    "gen:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.22.1",
+    "check:schema": "pi-settings-schema -p src/shared/config/types.ts -t GuardrailsConfig -o schema.json --version 0.22.1 --check",
     "test": "vitest run",
     "test:mutation": "vitest run src/shared/config/loader.mutation.test.ts tests/root-artifacts.mutation.test.ts",
     "test:e2e": "bun tests/omp-e2e.ts",
@@ -88,7 +88,7 @@
     "prepare": "[ -d .git ] && husky || true",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm changeset publish"
+    "release": "gh workflow run Publish --ref main"
   },
   "packageManager": "pnpm@10.26.1",
   "peerDependenciesMeta": {

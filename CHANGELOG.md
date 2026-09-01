@@ -1,5 +1,11 @@
 # omp-guard-kit
 
+## 0.22.1
+
+### Patch Changes
+
+- Migrate Guard Kit settings from custom Pi global agent directories during native OMP startup and verify the bundled extension before OMP release publication.
+
 ## 0.22.0
 
 ### Minor Changes

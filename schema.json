@@ -19,7 +19,7 @@
               "pattern": "^\\d{1,15}(\\.\\d{1,15})?(\\.\\d{1,15})?$"
             }
           ],
-          "description": "Config schema version, stamped by migrations. Current version: 0.22.0."
+          "description": "Config schema version, stamped by migrations. Current version: 0.22.1."
         },
         "enabled": {
           "type": "boolean",

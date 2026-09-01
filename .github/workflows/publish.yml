@@ -13,14 +13,12 @@ concurrency:
 
 jobs:
   publish:
-    name: Publish
+    name: Publish OMP release
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
       pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout
@@ -35,24 +33,19 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
           cache: "pnpm"
 
-      - name: Upgrade npm for stage publish support
-        run: npm install -g npm@latest
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Get release info
         id: release-info
         run: |
           pnpm changeset status --output=release.json 2>/dev/null || echo '{"releases":[]}' > release.json
-          node <<NODE
+          node <<'NODE'
           const fs = require('fs');
           const release = JSON.parse(fs.readFileSync('release.json', 'utf8'));
           const releases = release.releases?.filter(r => r.type !== 'none') || [];
-
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           const packageName = pkg.name || 'unknown-package';
           const fallbackVersion = pkg.version || '0.0.0';
@@ -75,7 +68,7 @@ jobs:
           rm -f release.json
         continue-on-error: true
 
-      - name: Create Release PR or Stage
+      - name: Create release PR or version commit
         id: changesets
         uses: changesets/action@v1
         with:
@@ -85,35 +78,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check for unpublished packages
-        id: check-publish
+      - name: Create OMP GitHub release
         if: steps.changesets.outputs.hasChangesets == 'false'
-        run: |
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          LOCAL_VERSION=$(node -p "require('./package.json').version")
-          REGISTRY_VERSION=$(npm view "$PACKAGE_NAME" version 2>/dev/null || echo "0.0.0")
-          if [ "$LOCAL_VERSION" != "$REGISTRY_VERSION" ]; then
-            echo "needs_staging=true" >> "$GITHUB_OUTPUT"
-            echo "version=$LOCAL_VERSION" >> "$GITHUB_OUTPUT"
-          else
-            echo "needs_staging=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Stage packages
-        if: steps.check-publish.outputs.needs_staging == 'true'
-        run: npm stage publish
-        env:
-          NPM_CONFIG_PROVENANCE: true
-
-      - name: Create GitHub releases
-        if: steps.check-publish.outputs.needs_staging == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.check-publish.outputs.version }}
         run: |
+          VERSION=$(node -p "require('./package.json').version")
+          MARKETPLACE_VERSION=$(node -p "require('./.omp-plugin/marketplace.json').plugins[0].version")
+          test "$VERSION" = "$MARKETPLACE_VERSION"
           TAG="v$VERSION"
-          git tag "$TAG"
-          git push origin "$TAG"
+          if ! git ls-remote --exit-code origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             awk -v v="$VERSION" '
               $0 == "## " v { found=1; next }

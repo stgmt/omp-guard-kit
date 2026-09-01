@@ -116,7 +116,7 @@ For a project-local root-artifact guard, create the Guard Kit settings file in t
     "mode": "extend",
     "allow": ["README.md", "package.json"],
     "deny": [],
-    "allowedDirectories": [".pi", "src", "tests"],
+    "allowedDirectories": [".pi", ".omp", "src", "tests"],
     "ignorePatterns": [],
     "trashPatterns": [],
     "configPatterns": [],

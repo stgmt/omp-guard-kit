@@ -6,9 +6,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const runtimeRoot =
+const runtimeRoot = resolve(
   process.env.OMP_RUNTIME_ROOT ??
-  "C:/Users/stigm/.omp/plugins/node_modules/@oh-my-pi/pi-coding-agent";
+    "C:/Users/stigm/.omp/plugins/node_modules/@oh-my-pi/pi-coding-agent",
+);
 const runtimeModule = (relativePath: string) => {
   const packagedRuntimePaths: Record<string, string> = {
     "src/extensibility/extensions/loader.ts": "dist/core/extensions/loader.js",

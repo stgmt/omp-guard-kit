@@ -19,6 +19,23 @@ omp plugin install omp-guard-kit@omp-guard-kit --scope project
 ```
 
 For a project-specific guard, keep the plugin project-scoped as shown above. Use `--scope user` only when you want the plugin available in every project.
+
+## Automatic plugin updates
+
+OMP marketplace plugins can update automatically at startup. Enable it globally with:
+
+```bash
+omp config set marketplace.autoUpdate auto
+```
+
+The setting is stored in `~/.omp/agent/config.yml`. OMP checks marketplace catalogs on startup and upgrades installed marketplace plugins when newer versions are available. Catalog refreshes are best-effort and normally happen when a catalog is older than 24 hours.
+
+This applies to plugins installed from an OMP marketplace, including project-scoped plugins. It does not update local-path plugins or arbitrary Git installs. To check manually:
+
+```bash
+omp plugin marketplace update
+omp plugin upgrade --dry-run
+```
 Pi can load the same package from the tagged GitHub release:
 
 ```bash

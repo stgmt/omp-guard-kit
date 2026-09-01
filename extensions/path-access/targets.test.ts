@@ -9,6 +9,12 @@ describe("targetsForTool", () => {
     ).resolves.toEqual(["/repo/README.md"]);
   });
 
+  it("ignores OMP device addresses as filesystem targets", async () => {
+    await expect(
+      targetsForTool("write", { path: "xd://propose" }, "/repo"),
+    ).resolves.toEqual([]);
+  });
+
   it("extracts bash path candidates", async () => {
     const cwd = "/repo";
     vol.fromJSON({ "/repo/README.md": "hello" });

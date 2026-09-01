@@ -37,9 +37,10 @@ await writeFile(
       features: {
         policies: false,
         permissionGate: false,
-        pathAccess: false,
+        pathAccess: true,
         rootArtifacts: true,
       },
+      pathAccess: { mode: "block", allowedPaths: [] },
       rootArtifacts: {
         enabled: true,
         mode: "replace",
@@ -129,6 +130,14 @@ try {
   assert.equal(blockedDirect?.block, true);
   assert.match(blockedDirect?.reason ?? "", /blocked\.txt/);
   assert.equal(existsSync(join(projectRoot, "blocked.txt")), false);
+
+  const proposedPlan = await runner.emitToolCall({
+    type: "tool_call",
+    toolName: "write",
+    toolCallId: "e2e-xd-propose",
+    input: { path: "xd://propose", content: "plan" },
+  });
+  assert.equal(proposedPlan, undefined);
 
   const allowedNested = await runner.emitToolCall({
     type: "tool_call",

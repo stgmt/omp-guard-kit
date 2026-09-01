@@ -1,4 +1,5 @@
 import { resolveFromCwd } from "../../src/core/paths";
+import { hasNonPathShape } from "../../src/core/paths/plausibility";
 import { extractBashPathCandidates } from "../../src/shared/paths";
 
 export async function targetsForTool(
@@ -8,7 +9,8 @@ export async function targetsForTool(
 ): Promise<string[]> {
   if (["read", "write", "edit", "grep", "find", "ls"].includes(toolName)) {
     const raw = String(input.file_path ?? input.path ?? "").trim();
-    return raw ? [resolveFromCwd(raw, cwd)] : [];
+    if (!raw || hasNonPathShape(raw)) return [];
+    return [resolveFromCwd(raw, cwd)];
   }
 
   if (toolName === "bash") {

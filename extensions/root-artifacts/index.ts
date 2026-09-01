@@ -2,6 +2,7 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
+import { hasNonPathShape } from "../../src/core/paths/plausibility";
 import {
   type AtomicConfig,
   createRootArtifactPolicy,
@@ -77,7 +78,7 @@ function directWriteTargets(
   const targets: RootArtifactTarget[] = [];
   for (const key of INPUT_PATH_KEYS) {
     const value = input[key];
-    if (typeof value === "string" && value.trim())
+    if (typeof value === "string" && value.trim() && !hasNonPathShape(value))
       targets.push({ rawPath: value, kind });
   }
   const patch = input.patch;

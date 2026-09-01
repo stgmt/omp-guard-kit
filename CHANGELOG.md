@@ -1,5 +1,11 @@
 # omp-guard-kit
 
+## 0.22.2
+
+### Patch Changes
+
+- Ignore URI-like device addresses during root-artifact and path-access target extraction.
+
 ## 0.22.1
 
 ### Patch Changes

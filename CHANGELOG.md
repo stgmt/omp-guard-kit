@@ -1,5 +1,11 @@
 # omp-guard-kit
 
+## 0.22.0
+
+### Minor Changes
+
+- Keep Pi configuration under `.pi` while native OMP uses `.omp`, and migrate existing Guard Kit settings automatically during startup.
+
 ## 0.21.0
 
 ### Minor Changes

@@ -22,7 +22,7 @@ For a project-specific guard, keep the plugin project-scoped as shown above. Use
 Pi can load the same package from the tagged GitHub release:
 
 ```bash
-pi install https://github.com/stgmt/omp-guard-kit#v0.21.0
+pi install https://github.com/stgmt/omp-guard-kit#v0.22.0
 ```
 
 ## First run
@@ -97,13 +97,13 @@ It catches built-in risky patterns like recursive deletes, privileged commands, 
 
 ### root-artifacts
 
-The `root-artifacts` extension is disabled by default and only activates from a project-local `.pi/extensions/guardrails.json` with `rootArtifacts.enabled: true`. It checks write/edit tool calls before execution and blocks root files outside the configured allowlist, root directories outside `allowedDirectories`, unresolved shell destinations, and paths that escape the project.
+The `root-artifacts` extension is disabled by default and only activates from a project-local Guard Kit settings file with `rootArtifacts.enabled: true`. Ordinary Pi stores it at `.pi/extensions/guardrails.json`; native OMP stores it at `.omp/extensions/guardrails.json`. It checks write/edit tool calls before execution and blocks root files outside the configured allowlist, root directories outside `allowedDirectories`, unresolved shell destinations, and paths that escape the project.
 
 Its policy is deterministic: deny patterns take priority, matching is case-insensitive, `.git`, `.svn`, and `.hg` are skipped, and root entries are classified as `trash`, `config`, or `unknown` for diagnostics. `autoPrune.enabled` is opt-in and atomically removes only safe stale basename entries from the local `allow` list.
 
 Relevant configuration fields are `mode` (`extend` or `replace`), `allow`, `deny`, `allowedDirectories`, `ignorePatterns`, `trashPatterns`, `configPatterns`, and `autoPrune`.
 
-For a project-local root-artifact guard, create `.pi/extensions/guardrails.json` in the project:
+For a project-local root-artifact guard, create the Guard Kit settings file in the project. Use `.pi/extensions/guardrails.json` for ordinary Pi or `.omp/extensions/guardrails.json` for native OMP:
 
 ```json
 {
@@ -163,8 +163,12 @@ Most configuration should happen through the interactive settings UI:
 
 Advanced users can edit the settings file directly:
 
-- Global: `~/.pi/agent/extensions/guardrails.json`
-- Project: `.pi/extensions/guardrails.json`
+- Pi global: `~/.pi/agent/extensions/guardrails.json`
+- Pi project: `.pi/extensions/guardrails.json`
+- OMP global: `~/.omp/agent/extensions/guardrails.json`
+- OMP project: `.omp/extensions/guardrails.json`
+
+Native OMP plugin-manager state remains under `.omp/plugins`; the JSON above is extension-owned configuration. When OMP first starts after this storage split, an existing `guardrails.json` is migrated from the matching Pi path automatically. OMP values win when both files exist, and legacy files are retained if migration cannot complete.
 
 OMP Guard Kit writes a `$schema` field to saved settings files, so modern editors provide autocomplete and validation. The generated schema is committed at [`schema.json`](schema.json).
 

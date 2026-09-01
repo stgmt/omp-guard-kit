@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -14,10 +14,10 @@ const runtimeModule = (relativePath: string) =>
 const originalCwd = process.cwd();
 
 const projectRoot = await mkdtemp(join(tmpdir(), "omp-root-artifacts-e2e-"));
-const configDirectory = join(projectRoot, ".pi", "extensions");
-await mkdir(configDirectory, { recursive: true });
+const ompConfigPath = join(projectRoot, ".omp", "extensions", "guardrails.json");
+await mkdir(join(projectRoot, ".omp", "extensions"), { recursive: true });
 await writeFile(
-  join(configDirectory, "guardrails.json"),
+  ompConfigPath,
   `${JSON.stringify(
     {
       enabled: true,
@@ -32,7 +32,7 @@ await writeFile(
         mode: "replace",
         allow: ["allowed.txt"],
         deny: [],
-        allowedDirectories: [".pi", "src"],
+        allowedDirectories: [".omp", "src"],
         ignorePatterns: [],
         autoPrune: { enabled: false },
       },
@@ -51,13 +51,12 @@ const [{ loadExtensions }, { ExtensionRunner }, { EventBus }, { SessionManager }
     runtimeModule("src/session/session-manager.ts"),
   ]);
 
-try {
+async function loadNativeExtension() {
   const eventBus = new EventBus();
   const diagnostics: unknown[] = [];
   eventBus.on("guardrails:root-artifacts:diagnostic", (data: unknown) => {
     diagnostics.push(data);
   });
-
   const extensionPath =
     process.env.OMP_EXTENSION_PATH ?? join(repoRoot, "dist", "extension.js");
   assert.equal(existsSync(extensionPath), true, "compiled OMP extension is missing");
@@ -70,7 +69,6 @@ try {
     "omp-guard-kit:onboarding",
     "omp-guard-kit:settings",
   ]);
-
   const sessionManager = SessionManager.inMemory(projectRoot);
   const modelRegistry = { getAvailable: () => [] };
   const runner = new ExtensionRunner(
@@ -83,10 +81,16 @@ try {
   for (const commandName of registeredCommandNames) {
     assert.equal(runner.getCommand(commandName)?.name, commandName);
   }
+  return { diagnostics, runner };
+}
 
+try {
+  assert.equal(existsSync(join(projectRoot, ".pi")), false);
+  let { diagnostics, runner } = await loadNativeExtension();
   await runner.emitBeforeAgentStart("compatibility probe", undefined, ["system"]);
   await runner.emit({ type: "session_start" });
   assert.equal(diagnostics.length > 0, true, "session diagnostic event was not emitted");
+  assert.equal(existsSync(join(projectRoot, ".pi")), false);
 
   const blockedBash = await runner.emitToolCall({
     type: "tool_call",
@@ -119,6 +123,39 @@ try {
   await writeFile(join(projectRoot, "src", "allowed.txt"), "marker\n");
   assert.equal(existsSync(join(projectRoot, "src", "allowed.txt")), true);
 
+  await rm(ompConfigPath);
+  await mkdir(join(projectRoot, ".pi", "extensions"), { recursive: true });
+  await writeFile(
+    join(projectRoot, ".pi", "extensions", "guardrails.json"),
+    JSON.stringify({ version: "0.21.0", enabled: false }),
+  );
+  await loadNativeExtension();
+  assert.equal(existsSync(join(projectRoot, ".pi", "extensions", "guardrails.json")), false);
+  assert.equal(existsSync(ompConfigPath), true);
+  assert.equal(JSON.parse(await readFile(ompConfigPath, "utf8")).enabled, false);
+
+  await mkdir(join(projectRoot, ".pi", "extensions"), { recursive: true });
+  await writeFile(
+    join(projectRoot, ".pi", "extensions", "guardrails.json"),
+    JSON.stringify({ version: "0.21.0", enabled: false, features: { rootArtifacts: false } }),
+  );
+  await writeFile(
+    ompConfigPath,
+    JSON.stringify({ version: "0.21.0", enabled: true, features: { rootArtifacts: true } }),
+  );
+  await loadNativeExtension();
+  assert.equal(existsSync(join(projectRoot, ".pi", "extensions", "guardrails.json")), false);
+  assert.equal(JSON.parse(await readFile(ompConfigPath, "utf8")).enabled, true);
+
+  await mkdir(join(projectRoot, ".pi", "extensions"), { recursive: true });
+  await writeFile(
+    join(projectRoot, ".pi", "extensions", "guardrails.json"),
+    "not-json",
+  );
+  ({ diagnostics, runner } = await loadNativeExtension());
+  assert.equal(existsSync(join(projectRoot, ".pi", "extensions", "guardrails.json")), true);
+  assert.equal(existsSync(ompConfigPath), true);
+
   console.log(
     JSON.stringify(
       {
@@ -127,6 +164,8 @@ try {
         projectRoot,
         blocked: ["unexpected.txt", "blocked.txt"],
         allowed: "src/allowed.txt",
+        migration: "local Pi config migrated; OMP wins conflicts",
+        failure: "invalid legacy config retained",
         diagnostics: diagnostics.length,
       },
       null,

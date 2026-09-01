@@ -1,5 +1,10 @@
 export { DEFAULT_CONFIG } from "./defaults";
-export { configLoader } from "./loader";
+export type { ConfigRuntime } from "./loader";
+export {
+  configLoader,
+  configureConfigRuntime,
+  createGuardrailsConfigLoader,
+} from "./loader";
 export { globalConfigMigrations, migrations } from "./migration";
 export type {
   AllowedPath,

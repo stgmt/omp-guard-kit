@@ -46,7 +46,8 @@ jobs:
       - name: Build and verify OMP bundle
         run: |
           pnpm build
-          git diff --exit-code -- dist/extension.js
+          test -s dist/extension.js
+          pnpm test:e2e
 
       - name: Get release info
         id: release-info

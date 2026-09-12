@@ -10,6 +10,8 @@ import {
   type PartialFuncReturn,
 } from "@golevelup/ts-vitest";
 import { assert, beforeEach, describe, expect, it, vi } from "vitest";
+import { configLoader } from "../../src/shared/config";
+import { DEFAULT_CONFIG } from "../../src/shared/config/defaults";
 import {
   GUARDRAILS_ACTION_BLOCKED_EVENT,
   GUARDRAILS_FEATURE_REGISTER_EVENT,
@@ -20,7 +22,6 @@ import {
 } from "../../src/shared/events";
 import permissionGate, { checkPermissionGateToolCall } from "./index";
 
-// Control the config the hook sees without touching the real config loader.
 vi.mock("../../src/shared/config", () => {
   function makeConfig(overrides: Record<string, unknown> = {}) {
     return {
@@ -247,7 +248,6 @@ describe("permissionGate extension hook", () => {
 
     const ctx = createCtx({ hasUI: false });
     const result = await toolCallHandler(DANGEROUS_EVENT, ctx);
-
     expect(result).toEqual({
       block: true,
       reason: expect.stringContaining("no UI to confirm"),
@@ -257,6 +257,46 @@ describe("permissionGate extension hook", () => {
       GUARDRAILS_ACTION_BLOCKED_EVENT,
       expect.objectContaining({
         block: expect.objectContaining({ source: "nonInteractive" }),
+      }),
+    );
+  });
+
+  it("auto-denies the proven host-kill shape without prompting", async () => {
+    assert(toolCallHandler, "tool_call handler should be registered");
+
+    vi.mocked(configLoader.getConfig).mockReturnValueOnce({
+      ...DEFAULT_CONFIG,
+      enabled: true,
+      features: {
+        policies: false,
+        permissionGate: true,
+        pathAccess: false,
+        rootArtifacts: false,
+      },
+    });
+    const ctx = createCtx({
+      ui: { custom: vi.fn(), select: vi.fn() },
+    });
+
+    const result = await toolCallHandler(
+      {
+        type: "tool_call",
+        toolCallId: "host-kill",
+        toolName: "bash",
+        input: { command: "taskkill /IM omp.exe /F" },
+      },
+      ctx,
+    );
+
+    expect(result).toEqual({
+      block: true,
+      reason: expect.stringContaining("auto-denied"),
+    });
+    expect(ctx.ui.custom).not.toHaveBeenCalled();
+    expect(pi.events.emit).toHaveBeenCalledWith(
+      GUARDRAILS_ACTION_BLOCKED_EVENT,
+      expect.objectContaining({
+        block: expect.objectContaining({ source: "permission" }),
       }),
     );
   });

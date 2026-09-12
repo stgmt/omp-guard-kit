@@ -332,6 +332,78 @@ describe("container matcher (docker/podman)", () => {
   });
 });
 
+describe("host runtime kill matchers", () => {
+  it("matches taskkill /IM against the omp image", () => {
+    expect(findMatch(["taskkill", "/IM", "omp.exe", "/F"])).toBe(
+      "host runtime mass kill (taskkill /IM against omp/bun/node)",
+    );
+  });
+
+  it("matches uppercase TASKKILL /IM against bun", () => {
+    expect(findMatch(["TASKKILL", "/F", "/IM", "bun"])).toBe(
+      "host runtime mass kill (taskkill /IM against omp/bun/node)",
+    );
+  });
+
+  it("allows taskkill /PID single-tree kills", () => {
+    expect(findMatch(["taskkill", "/PID", "1234", "/T", "/F"])).toBeUndefined();
+  });
+
+  it("allows taskkill /IM against foreign images", () => {
+    expect(findMatch(["taskkill", "/IM", "notepad.exe"])).toBeUndefined();
+  });
+
+  it("matches pkill against node", () => {
+    expect(findMatch(["pkill", "-9", "node"])).toBe(
+      "host runtime mass kill (pkill against omp/bun/node)",
+    );
+  });
+
+  it("matches pkill -f against omp", () => {
+    expect(findMatch(["pkill", "-f", "omp"])).toBe(
+      "host runtime mass kill (pkill against omp/bun/node)",
+    );
+  });
+
+  it("allows pkill with flags only", () => {
+    expect(findMatch(["pkill", "-P", "1234"])).toBeUndefined();
+  });
+
+  it("matches killall against bun", () => {
+    expect(findMatch(["killall", "bun"])).toBe(
+      "host runtime mass kill (killall against omp/bun/node)",
+    );
+  });
+
+  it("matches Stop-Process -Name against omp", () => {
+    expect(findMatch(["Stop-Process", "-Name", "omp"])).toBe(
+      "host runtime mass kill (Stop-Process -Name against omp/bun/node)",
+    );
+  });
+
+  it("matches lowercase stop-process -ProcessName against node", () => {
+    expect(findMatch(["stop-process", "-ProcessName", "node.exe"])).toBe(
+      "host runtime mass kill (Stop-Process -Name against omp/bun/node)",
+    );
+  });
+
+  it("allows Stop-Process -Id single kills", () => {
+    expect(findMatch(["Stop-Process", "-Id", "1234"])).toBeUndefined();
+  });
+
+  it("detects the killer shape end to end", () => {
+    const result = checkDangerousCommand({
+      command: "taskkill /IM omp.exe /F",
+      patterns: compileCommandPatterns([]),
+      useBuiltinMatchers: true,
+      fallbackPatterns: [],
+    });
+    expect(result?.description).toBe(
+      "host runtime mass kill (taskkill /IM against omp/bun/node)",
+    );
+  });
+});
+
 describe("checkDangerousCommand", () => {
   it("matches built-in dangerous commands structurally", () => {
     const result = checkDangerousCommand({

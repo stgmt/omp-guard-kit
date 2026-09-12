@@ -296,6 +296,81 @@ const containerMatcher: StructuralMatcher = (words) => {
 
   return undefined;
 };
+// =============================================================================
+// Host Runtime Protection
+// =============================================================================
+
+/**
+ * Image names that host live agent sessions. All OMP sessions share the
+ * `omp` image name, so killing by image kills siblings, not just one agent.
+ */
+const HOST_RUNTIME_IMAGES = new Set(["omp", "bun", "node"]);
+
+function hostRuntimeImage(word: string): boolean {
+  const base = word.toLowerCase().split(/[\\/]/).at(-1) ?? "";
+  const stem = base.replace(/\.(exe|cmd|bat|ps1)$/, "");
+  return HOST_RUNTIME_IMAGES.has(stem);
+}
+
+function isFlag(word: string): boolean {
+  return word.startsWith("-") || word.startsWith("/");
+}
+
+/**
+ * taskkill /IM <host image> (any casing). PID kills (`/PID`, no `/IM`)
+ * address a single tree and keep working.
+ */
+function taskkillMatcher(words: string[]): string | undefined {
+  if ((words[0] ?? "").toLowerCase() !== "taskkill") return undefined;
+  const args = words.slice(1);
+  if (!args.some((word) => word.toLowerCase() === "/im")) return undefined;
+  if (!args.some(hostRuntimeImage)) return undefined;
+  return "host runtime mass kill (taskkill /IM against omp/bun/node)";
+}
+
+/**
+ * pkill/killall <host image>. Flag-only invocations (pids, signals)
+ * do not name an image and keep working.
+ */
+function nameKillMatcher(words: string[]): string | undefined {
+  const name = (words[0] ?? "").toLowerCase();
+  if (name !== "pkill" && name !== "killall") return undefined;
+  if (words.slice(1).some((word) => !isFlag(word) && hostRuntimeImage(word))) {
+    return `host runtime mass kill (${name} against omp/bun/node)`;
+  }
+  return undefined;
+}
+
+/**
+ * Stop-Process -Name <host image> (any casing). -Id kills address a
+ * single process and keep working.
+ */
+function stopProcessMatcher(words: string[]): string | undefined {
+  if ((words[0] ?? "").toLowerCase() !== "stop-process") return undefined;
+  const args = words.slice(1);
+  const namesNameFlag = (word: string): boolean => {
+    const flag = word.toLowerCase();
+    return flag === "-name" || flag === "-processname" || flag === "/name";
+  };
+  if (
+    args.some(
+      (word, index) =>
+        namesNameFlag(word) &&
+        args
+          .slice(index + 1)
+          .some((value) => !isFlag(value) && hostRuntimeImage(value)),
+    )
+  ) {
+    return "host runtime mass kill (Stop-Process -Name against omp/bun/node)";
+  }
+  if (
+    !args.some((word) => word.toLowerCase() === "-id") &&
+    args.some((word) => !isFlag(word) && hostRuntimeImage(word))
+  ) {
+    return "host runtime mass kill (Stop-Process against omp/bun/node)";
+  }
+  return undefined;
+}
 
 // =============================================================================
 // Matcher Registry
@@ -329,6 +404,11 @@ export const BUILTIN_MATCHERS: StructuralMatcher[] = [
 
   // Container escapes
   containerMatcher,
+
+  // Host runtime protection
+  taskkillMatcher,
+  nameKillMatcher,
+  stopProcessMatcher,
 ];
 
 /**
@@ -350,6 +430,10 @@ export const BUILTIN_KEYWORD_PATTERNS = new Set([
   "fdisk",
   "parted",
   "docker run --privileged",
+  "taskkill /IM",
+  "pkill",
+  "killall",
+  "Stop-Process",
 ]);
 
 /**

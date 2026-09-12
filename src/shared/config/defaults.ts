@@ -125,6 +125,14 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
     useBuiltinMatchers: true,
     requireConfirmation: true,
     allowedPatterns: [],
-    autoDenyPatterns: [],
+    autoDenyPatterns: [
+      {
+        pattern:
+          '[Tt][Aa][Ss][Kk][Kk][Ii][Ll][Ll](\\.exe)?\\s+.*/[Ii][Mm]\\s+"?(omp|bun|node)(\\.exe)?"?([\\s;]|$)',
+        regex: true,
+        description:
+          "host runtime mass kill (taskkill /IM against omp/bun/node)",
+      },
+    ],
   },
 };

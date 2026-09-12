@@ -112,7 +112,7 @@ Granted paths are stored in `pathAccess.allowedPaths` as explicit `{ kind, path 
 
 The `permission-gate` extension detects dangerous bash commands before they run.
 
-It catches built-in risky patterns like recursive deletes, privileged commands, disk formatting, broad permission changes, and configured custom patterns. You can allow once, allow for the session, deny, decline and stop (which also aborts the current turn), or configure auto-deny rules.
+It catches built-in risky patterns like recursive deletes, privileged commands, disk formatting, broad permission changes, host-runtime mass kills (`taskkill /IM`, `pkill`, `killall`, `Stop-Process -Name` against the omp/bun/node images; PID kills keep working), and configured custom patterns. You can allow once, allow for the session, deny, decline and stop (which also aborts the current turn), or configure auto-deny rules. The proven host-kill shape is fail-closed in the default auto-deny list, so it can never reach a confirmation prompt.
 
 ### root-artifacts
 

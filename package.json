@@ -1,6 +1,6 @@
 {
   "name": "omp-guard-kit",
-  "version": "0.22.2",
+  "version": "0.23.0",
   "description": "Composable Pi and OMP guardrails with deterministic root-artifact protection.",
   "license": "MIT",
   "type": "module",

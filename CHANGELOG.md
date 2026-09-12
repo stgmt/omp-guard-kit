@@ -1,5 +1,44 @@
 # omp-guard-kit
 
+## 0.23.0
+
+### Minor Changes
+
+- da065af: Automatic root-setup checklist on first session
+
+  - When root-artifact protection is off, the first interactive session
+    shows an `askDialog` checklist of flagged root entries (green count vs
+    would-be-blocked with classification reasons) plus an enable question.
+  - Answering enables protection and writes the local allowlist; declining
+    or postponing leaves state untouched so the hook asks again next
+    session. Cancelling falls back to the `/omp-guard-kit:setup` hint.
+  - The `/omp-guard-kit:setup` command now runs the same checklist on
+    demand. The flow is fail-open and never fires twice per project per
+    process.
+
+- da065af: Single tool_call/session_start dispatcher with per-project root setup
+
+  - One `tool_call` handler fans out to policies, pathAccess,
+    permissionGate and rootArtifacts in historical order with first-block-wins,
+    replacing four independent registrations.
+  - One `session_start` handler owns feature discovery, config warnings,
+    root diagnostics and a once-per-project setup hint.
+  - New `omp-guard-kit:setup` command enables root-artifact protection for
+    the current project (local `rootArtifacts.enabled` + mode) in two answers.
+
+- da065af: Commit gate for root artifacts: check-root CLI plus managed pre-commit hook
+
+  - New `guard-kit-check-root` bin evaluates staged root entries against
+    the project-local policy with the same engine as the extension.
+    Unconfigured projects pass silently; violations exit 1.
+  - The setup checklist offers to install a managed pre-commit hook that
+    runs the staged check. Foreign hooks and custom `core.hooksPath`
+    setups are never overwritten: they get a manual snippet instead.
+
+### Patch Changes
+
+- Block host-runtime mass-kill commands. New builtin structural matchers deny `taskkill /IM`, `pkill`, `killall` and `Stop-Process -Name` against the `omp`/`bun`/`node` images (all live OMP sessions share the `omp.exe` image name, so one agent's "cleanup" TerminateProcess'd its own host plus siblings on 2026-09-12). Single-tree kills by PID (`taskkill /PID … /T /F`) keep working. The proven killer shape is additionally fail-closed in default `autoDenyPatterns`, so no confirmation prompt can be misclicked.
+
 ## 0.22.2
 
 ### Patch Changes

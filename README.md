@@ -120,7 +120,7 @@ The `root-artifacts` extension is disabled by default and only activates from a 
 
 Its policy is deterministic: deny patterns take priority, matching is case-insensitive, `.git`, `.svn`, and `.hg` are skipped, and root entries are classified as `trash`, `config`, or `unknown` for diagnostics. `autoPrune.enabled` is opt-in and atomically removes only safe stale basename entries from the local `allow` list.
 
-Tool hooks cannot see `git commit`, so commits are gated separately. The setup checklist offers to install a managed pre-commit hook that runs the staged check; foreign hooks and custom `core.hooksPath` setups are never overwritten. The same check runs standalone:
+Tool hooks cannot see `git commit`, so commits are gated separately. The setup checklist offers to install a managed pre-commit hook that runs the staged check; foreign hooks and custom `core.hooksPath` setups are never overwritten. The hook is fail-closed: if `node` is missing or the dist bundle is absent, the commit is blocked with a diagnostic message. A kill-switch (`GUARD_KIT_SKIP=1`) bypasses the check for emergencies. The same check runs standalone:
 
 ```text
 guard-kit-check-root --staged
@@ -128,7 +128,7 @@ guard-kit-check-root --staged --worktree
 guard-kit-check-root --staged --format=json
 ```
 
-Unconfigured projects pass silently (exit 0); staged violations fail the commit (exit 1).
+Unconfigured projects pass silently (exit 0); staged violations fail the commit (exit 1); malformed config files fail closed (exit 2). In `extend` mode, `allow` and `deny` lists are unioned with global config; in `replace` mode, only the local list is used. The structural matchers also rescan nested shell payloads (`sh -c`, `powershell -Command`, `cmd /c`) up to depth 2, so wrapper-smuggled kill commands are caught.
 
 Relevant configuration fields are `mode` (`extend` or `replace`), `allow`, `deny`, `allowedDirectories`, `ignorePatterns`, `trashPatterns`, `configPatterns`, and `autoPrune`.
 

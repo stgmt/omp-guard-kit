@@ -43,6 +43,7 @@ vi.mock("../../src/root-artifacts/hook", () => ({
     detail: "/hooks/pre-commit",
   })),
   manualSnippet: vi.fn(() => "manual snippet"),
+  resolveDistPath: vi.fn(() => "/fake/dist/check-root.js"),
 }));
 type TestCtx = ExtensionContext & {
   ui: {

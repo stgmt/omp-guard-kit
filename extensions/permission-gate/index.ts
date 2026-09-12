@@ -50,12 +50,13 @@ export async function checkPermissionGateToolCall(
   if (typeof commandValue !== "string") return;
   const command = commandValue;
   const action = { kind: "command" as const, command, origin: "bash" };
-  if (isCommandAllowed(command)) return;
-
+  // Deny wins over session grants: a benign allowlisted substring must not
+  // smuggle a killer shape past auto-deny.
   const autoDenyMatch = matchCommandPattern(
     command,
     config.permissionGate.autoDenyPatterns,
   );
+  if (isCommandAllowed(command) && !autoDenyMatch) return;
 
   if (autoDenyMatch) {
     const reason = formatAutoDenyReason(autoDenyMatch);

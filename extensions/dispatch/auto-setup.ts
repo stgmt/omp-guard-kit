@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +10,7 @@ import {
 import {
   installPreCommitHook,
   manualSnippet,
+  resolveDistPath,
 } from "../../src/root-artifacts/hook";
 import { OMP_GUARD_KIT_COMMANDS } from "../../src/shared/commands";
 import { configLoader } from "../../src/shared/config";
@@ -239,13 +239,12 @@ async function autoSetup(
 }
 
 function installHookGate(ctx: ExtensionContext): void {
-  const distPath = resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../dist/check-root.js",
-  );
-  if (!existsSync(distPath)) {
+  const extDir = dirname(fileURLToPath(import.meta.url));
+  const distPath = resolveDistPath(extDir);
+  if (!distPath) {
+    const fallback = resolve(extDir, "../../dist/check-root.js");
     ctx.ui.notify(
-      `[OMP Guard Kit] bundle not built yet. ${manualSnippet(distPath)}`,
+      `[OMP Guard Kit] bundle not built yet. ${manualSnippet(fallback)}`,
       "warning",
     );
     return;

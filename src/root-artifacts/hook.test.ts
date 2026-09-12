@@ -42,7 +42,7 @@ describe("installPreCommitHook", () => {
       "utf8",
     ) as string;
     expect(content).toContain(HOOK_MARKER);
-    expect(content).toContain(`node "${DIST}" --staged`);
+    expect(content).toContain(`node '${DIST}' --staged`);
   });
 
   it("rewrites its own managed hook", () => {
@@ -112,5 +112,30 @@ describe("installPreCommitHook", () => {
     const script = hookScript(DIST);
     expect(script.startsWith("#!/bin/sh")).toBe(true);
     expect(script).toContain("|| exit 1");
+  });
+
+  it("fail-closes when node is missing", () => {
+    const script = hookScript(DIST);
+    expect(script).toContain("node not found");
+    expect(script).toMatch(/command -v node.*exit 1/s);
+  });
+
+  it("fail-closes when dist is missing", () => {
+    const script = hookScript(DIST);
+    expect(script).toContain("dist missing");
+    expect(script).toMatch(/\[ ! -f .*exit 1/s);
+  });
+
+  it("single-quotes paths with shell metacharacters", () => {
+    const weird = "/path with $(whoami) and `cmd`/check-root.js";
+    const script = hookScript(weird);
+    expect(script).toContain(`'${weird}'`);
+    expect(script).not.toContain(`"${weird}"`);
+  });
+
+  it("escapes embedded single quotes in paths", () => {
+    const withQuote = "/path/it's/check-root.js";
+    const script = hookScript(withQuote);
+    expect(script).toContain(`'/path/it'\\''s/check-root.js'`);
   });
 });

@@ -50,7 +50,69 @@ describe("loadLocalPolicy", () => {
     );
     expect(policy).not.toBeNull();
     if (!policy) throw new Error("expected policy");
-    expect(checkStaged(["blocked.txt"], "/repo", policy)).toHaveLength(1);
+    expect(checkStaged(["blocked.txt"], "/repo", policy.policy)).toHaveLength(
+      1,
+    );
+  });
+
+  it("unions global and local allow in extend mode", async () => {
+    const policy = await loadLocalPolicy(
+      "/repo",
+      async (path: string) => {
+        if (path.replace(/\\/g, "/").includes("/repo/")) {
+          return JSON.stringify({
+            features: { rootArtifacts: true },
+            rootArtifacts: {
+              enabled: true,
+              mode: "extend",
+              allow: ["local.txt"],
+            },
+          });
+        }
+        return JSON.stringify({
+          rootArtifacts: {
+            enabled: true,
+            mode: "extend",
+            allow: ["global.txt"],
+          },
+        });
+      },
+      "/home",
+    );
+    expect(policy).not.toBeNull();
+    if (!policy) throw new Error("expected policy");
+    expect(policy.policy.allow).toEqual(
+      expect.arrayContaining(["local.txt", "global.txt"]),
+    );
+  });
+
+  it("replace mode uses only local allow", async () => {
+    const policy = await loadLocalPolicy(
+      "/repo",
+      async (path: string) => {
+        if (path.replace(/\\/g, "/").includes("/repo/")) {
+          return JSON.stringify({
+            features: { rootArtifacts: true },
+            rootArtifacts: {
+              enabled: true,
+              mode: "replace",
+              allow: ["local.txt"],
+            },
+          });
+        }
+        return JSON.stringify({
+          rootArtifacts: {
+            enabled: true,
+            mode: "extend",
+            allow: ["global.txt"],
+          },
+        });
+      },
+      "/home",
+    );
+    expect(policy).not.toBeNull();
+    if (!policy) throw new Error("expected policy");
+    expect(policy.policy.allow).toEqual(["local.txt"]);
   });
 });
 
@@ -100,5 +162,23 @@ describe("main", () => {
       out: () => {},
     });
     expect(code).toBe(2);
+  });
+
+  it("skips with exit 0 when GUARD_KIT_SKIP=1", async () => {
+    const orig = process.env.GUARD_KIT_SKIP;
+    process.env.GUARD_KIT_SKIP = "1";
+    try {
+      const out: string[] = [];
+      const code = await main([], {
+        gitRoot: () => "/repo",
+        stagedFiles: () => ["blocked.txt"],
+        out: (text) => out.push(text),
+      });
+      expect(code).toBe(0);
+      expect(out.join("\n")).toContain("skipped");
+    } finally {
+      if (orig === undefined) delete process.env.GUARD_KIT_SKIP;
+      else process.env.GUARD_KIT_SKIP = orig;
+    }
   });
 });

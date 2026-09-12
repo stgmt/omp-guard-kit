@@ -1,5 +1,17 @@
 # omp-guard-kit
 
+## 0.24.0
+
+### Minor Changes
+
+- Host-runtime kill protection: structural matchers now catch `taskkill /FI` filters, wildcard image specs (`/IM omp*`, `/IM ?`), and `Stop-Process` without `-Id`. The auto-deny regex covers `powershell -Command` and `cmd /c` wrappers with optional quoting. Nested shell payloads (`sh -c`, `powershell -Command`, `cmd /c`) are rescanned up to depth 2 so wrapper-smuggled kill commands are caught; `cmd /c` joins the rest of the line as the script.
+
+  Permission gate: auto-deny now wins over session grants — a benign allowlisted substring cannot smuggle a killer shape past the gate.
+
+  check-root CLI: global config supplies defaults for `allow`, `deny`, and feature flags; local config is discovered by walking from staged-file directories up to the repo root (nearest marker wins, shadowing is respected). Malformed config files fail closed (exit 2) instead of silently disabling. `extend` mode unions local and global lists; `replace` mode uses only local. `--diff-filter=ACMR` excludes deletions from the staged scan. Strict argument parsing rejects unknown flags.
+
+  Pre-commit hook: fail-closed when `node` is missing or the dist bundle is absent (was fail-open). Paths are single-quoted to prevent shell metacharacter injection. Kill-switch `GUARD_KIT_SKIP=1` bypasses the check. Dist path resolution tries multiple candidates.
+
 ## 0.23.0
 
 ### Minor Changes

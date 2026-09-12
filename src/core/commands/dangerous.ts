@@ -32,6 +32,8 @@ export interface DangerousCommandCheckOptions {
   patterns: readonly CompiledCommandPattern[];
   useBuiltinMatchers: boolean;
   fallbackPatterns: readonly CommandPattern[];
+  /** Nested `-c` rescan depth. Callers leave this unset (defaults to 0). */
+  depth?: number;
 }
 
 /**
@@ -306,28 +308,68 @@ const containerMatcher: StructuralMatcher = (words) => {
  */
 const HOST_RUNTIME_IMAGES = new Set(["omp", "bun", "node"]);
 
-function hostRuntimeImage(word: string): boolean {
-  const base = word.toLowerCase().split(/[\\/]/).at(-1) ?? "";
-  const stem = base.replace(/\.(exe|cmd|bat|ps1)$/, "");
-  return HOST_RUNTIME_IMAGES.has(stem);
+function stripExecutableExtension(base: string): string {
+  return base.replace(/\.(exe|cmd|bat|ps1)$/, "");
 }
 
-function isFlag(word: string): boolean {
+function hostRuntimeImage(word: string): boolean {
+  const unquoted = word.replace(/^["']+|["']+$/g, "");
+  const base = unquoted.toLowerCase().split(/[\\/]/).at(-1) ?? "";
+  const stem = stripExecutableExtension(base);
+  if (HOST_RUNTIME_IMAGES.has(stem)) return true;
+  // Wildcard specs (taskkill /IM omp*, Stop-Process -Name 'node*') match
+  // every host image when the literal remainder names one (or nothing).
+  if (!base.includes("*") && !base.includes("?")) return false;
+  const literal = stripExecutableExtension(base.replace(/[*?]/g, ""));
+  return (
+    literal === "" ||
+    [...HOST_RUNTIME_IMAGES].some(
+      (image) => image.includes(literal) || literal.includes(image),
+    )
+  );
+}
+
+function isWindowsFlag(word: string): boolean {
   return word.startsWith("-") || word.startsWith("/");
 }
 
+function isUnixFlag(word: string): boolean {
+  if (!word.startsWith("-")) return false;
+  // Absolute paths are values for unix tools, not flags.
+  return !word.includes("/", 1);
+}
+
+function containsHostImage(args: readonly string[]): boolean {
+  return args.some((word) => !isWindowsFlag(word) && hostRuntimeImage(word));
+}
+
 /**
- * taskkill /IM <host image> (any casing). PID kills (`/PID`, no `/IM`)
- * address a single tree and keep working.
+ * taskkill /IM <host image> or /FI filter naming one (any casing).
+ * PID kills (`/PID`, no `/IM`, no image filter) address a single tree
+ * and keep working.
  */
 function taskkillMatcher(words: string[]): string | undefined {
   if ((words[0] ?? "").toLowerCase() !== "taskkill") return undefined;
   const args = words.slice(1);
-  if (!args.some((word) => word.toLowerCase() === "/im")) return undefined;
-  if (!args.some(hostRuntimeImage)) return undefined;
-  return "host runtime mass kill (taskkill /IM against omp/bun/node)";
+  const lowered = args.map((word) => word.toLowerCase());
+  if (lowered.includes("/im") && containsHostImage(args)) {
+    return "host runtime mass kill (taskkill /IM against omp/bun/node)";
+  }
+  const filterIndex = lowered.indexOf("/fi");
+  if (filterIndex >= 0) {
+    const values = args.slice(filterIndex + 1);
+    const namesImage = (word: string): boolean => {
+      if (!isWindowsFlag(word) && hostRuntimeImage(word)) return true;
+      // Quoted filters arrive as one token: "IMAGENAME eq omp.exe".
+      const text = word.toLowerCase();
+      return [...HOST_RUNTIME_IMAGES].some((image) => text.includes(image));
+    };
+    if (values.some(namesImage)) {
+      return "host runtime mass kill (taskkill /FI filter against omp/bun/node)";
+    }
+  }
+  return undefined;
 }
-
 /**
  * pkill/killall <host image>. Flag-only invocations (pids, signals)
  * do not name an image and keep working.
@@ -335,7 +377,9 @@ function taskkillMatcher(words: string[]): string | undefined {
 function nameKillMatcher(words: string[]): string | undefined {
   const name = (words[0] ?? "").toLowerCase();
   if (name !== "pkill" && name !== "killall") return undefined;
-  if (words.slice(1).some((word) => !isFlag(word) && hostRuntimeImage(word))) {
+  if (
+    words.slice(1).some((word) => !isUnixFlag(word) && hostRuntimeImage(word))
+  ) {
     return `host runtime mass kill (${name} against omp/bun/node)`;
   }
   return undefined;
@@ -358,20 +402,19 @@ function stopProcessMatcher(words: string[]): string | undefined {
         namesNameFlag(word) &&
         args
           .slice(index + 1)
-          .some((value) => !isFlag(value) && hostRuntimeImage(value)),
+          .some((value) => !isWindowsFlag(value) && hostRuntimeImage(value)),
     )
   ) {
     return "host runtime mass kill (Stop-Process -Name against omp/bun/node)";
   }
   if (
     !args.some((word) => word.toLowerCase() === "-id") &&
-    args.some((word) => !isFlag(word) && hostRuntimeImage(word))
+    containsHostImage(args)
   ) {
     return "host runtime mass kill (Stop-Process against omp/bun/node)";
   }
   return undefined;
 }
-
 // =============================================================================
 // Matcher Registry
 // =============================================================================
@@ -478,6 +521,43 @@ export function compileCommandPatterns(
   return configs.map(compileCommandPattern);
 }
 
+const NESTED_SHELLS = new Set([
+  "sh",
+  "bash",
+  "zsh",
+  "dash",
+  "ksh",
+  "powershell",
+  "pwsh",
+  "cmd",
+]);
+
+const MAX_NESTED_DEPTH = 2;
+
+function nestedScripts(words: string[]): string[] {
+  const shell = (words[0] ?? "").toLowerCase().split(/[\\/]/).at(-1) ?? "";
+  if (!NESTED_SHELLS.has(shell)) return [];
+  const isCmd = shell === "cmd";
+  const scripts: string[] = [];
+  for (let index = 1; index < words.length; index += 1) {
+    const flag = words[index].toLowerCase();
+    // PowerShell -Command is the long form of -c; both take the next word
+    // as a script payload.  cmd /c takes the rest of the line as the
+    // script — join all remaining words so unquoted payloads are caught.
+    if (
+      (flag === "-c" || flag === "/c" || flag === "-command") &&
+      index + 1 < words.length
+    ) {
+      if (isCmd) {
+        scripts.push(words.slice(index + 1).join(" "));
+        break;
+      }
+      scripts.push(words[index + 1]);
+    }
+  }
+  return scripts;
+}
+
 function matchBuiltinDangerous(
   words: string[],
 ): DangerousCommandMatch | undefined {
@@ -494,6 +574,7 @@ export function checkDangerousCommand({
   patterns,
   useBuiltinMatchers,
   fallbackPatterns,
+  depth = 0,
 }: DangerousCommandCheckOptions): DangerousCommandMatch | undefined {
   let parsedSuccessfully = false;
 
@@ -512,6 +593,30 @@ export function checkDangerousCommand({
         return false;
       });
       if (match) return match;
+      // Wrapper smuggling: `sh -c "pkill omp"` hides the payload as one
+      // string argument. Re-parse nested `-c` payloads with a depth cap.
+      // `$(...)` contents are erased by word rendering (known limit).
+      if (depth < MAX_NESTED_DEPTH) {
+        let nested: DangerousCommandMatch | undefined;
+        walkCommands(ast, (cmd) => {
+          const words = (cmd.words ?? []).map(wordToString);
+          for (const script of nestedScripts(words)) {
+            const result = checkDangerousCommand({
+              command: script,
+              patterns,
+              useBuiltinMatchers,
+              fallbackPatterns,
+              depth: depth + 1,
+            });
+            if (result) {
+              nested = result;
+              return true;
+            }
+          }
+          return false;
+        });
+        if (nested) return nested;
+      }
     } catch {
       for (const pattern of fallbackPatterns) {
         if (command.includes(pattern.pattern)) {

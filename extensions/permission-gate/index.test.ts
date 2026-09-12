@@ -300,4 +300,104 @@ describe("permissionGate extension hook", () => {
       }),
     );
   });
+
+  it("auto-denies uppercase image casing without prompting", async () => {
+    assert(toolCallHandler, "tool_call handler should be registered");
+    vi.mocked(configLoader.getConfig).mockReturnValueOnce({
+      ...DEFAULT_CONFIG,
+      enabled: true,
+      features: {
+        policies: false,
+        permissionGate: true,
+        pathAccess: false,
+        rootArtifacts: false,
+      },
+    });
+    const ctx = createCtx({
+      ui: { custom: vi.fn(), select: vi.fn() },
+    });
+
+    const result = await toolCallHandler(
+      {
+        type: "tool_call",
+        toolCallId: "host-kill-upper",
+        toolName: "bash",
+        input: { command: "TASKKILL /F /IM OMP.EXE" },
+      },
+      ctx,
+    );
+
+    expect(result).toEqual({
+      block: true,
+      reason: expect.stringContaining("auto-denied"),
+    });
+    expect(ctx.ui.custom).not.toHaveBeenCalled();
+  });
+
+  it("does not auto-deny quoted killer text", async () => {
+    assert(toolCallHandler, "tool_call handler should be registered");
+    vi.mocked(configLoader.getConfig).mockReturnValueOnce({
+      ...DEFAULT_CONFIG,
+      enabled: true,
+      features: {
+        policies: false,
+        permissionGate: true,
+        pathAccess: false,
+        rootArtifacts: false,
+      },
+    });
+    const ctx = createCtx({
+      ui: { custom: vi.fn(), select: vi.fn() },
+    });
+
+    const result = await toolCallHandler(
+      {
+        type: "tool_call",
+        toolCallId: "echo-killer",
+        toolName: "bash",
+        input: { command: 'echo "taskkill /IM omp.exe"' },
+      },
+      ctx,
+    );
+
+    expect(result).toBeUndefined();
+    expect(ctx.ui.custom).not.toHaveBeenCalled();
+  });
+
+  it("auto-deny wins over a smuggling session grant", async () => {
+    assert(toolCallHandler, "tool_call handler should be registered");
+    vi.mocked(configLoader.getConfig).mockReturnValueOnce({
+      ...DEFAULT_CONFIG,
+      enabled: true,
+      features: {
+        policies: false,
+        permissionGate: true,
+        pathAccess: false,
+        rootArtifacts: false,
+      },
+      permissionGate: {
+        ...DEFAULT_CONFIG.permissionGate,
+        allowedPatterns: [{ pattern: "taskkill" }],
+      },
+    });
+    const ctx = createCtx({
+      ui: { custom: vi.fn(), select: vi.fn() },
+    });
+
+    const result = await toolCallHandler(
+      {
+        type: "tool_call",
+        toolCallId: "grant-smuggle",
+        toolName: "bash",
+        input: { command: "taskkill /IM omp.exe /F" },
+      },
+      ctx,
+    );
+
+    expect(result).toEqual({
+      block: true,
+      reason: expect.stringContaining("auto-denied"),
+    });
+    expect(ctx.ui.custom).not.toHaveBeenCalled();
+  });
 });

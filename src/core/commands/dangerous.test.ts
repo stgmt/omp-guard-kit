@@ -402,6 +402,77 @@ describe("host runtime kill matchers", () => {
       "host runtime mass kill (taskkill /IM against omp/bun/node)",
     );
   });
+
+  it("matches taskkill /FI filters naming a host image", () => {
+    expect(findMatch(["taskkill", "/FI", "IMAGENAME eq omp.exe"])).toBe(
+      "host runtime mass kill (taskkill /FI filter against omp/bun/node)",
+    );
+  });
+
+  it("matches wildcard image specs", () => {
+    expect(findMatch(["taskkill", "/IM", "omp*.exe", "/F"])).toBe(
+      "host runtime mass kill (taskkill /IM against omp/bun/node)",
+    );
+    expect(findMatch(["Stop-Process", "-Name", "node*"])).toBe(
+      "host runtime mass kill (Stop-Process -Name against omp/bun/node)",
+    );
+  });
+
+  it("matches pkill -f with an absolute host path", () => {
+    expect(findMatch(["pkill", "-f", "/usr/bin/node"])).toBe(
+      "host runtime mass kill (pkill against omp/bun/node)",
+    );
+  });
+
+  it("allows quoted foreign images in filters", () => {
+    expect(
+      findMatch(["taskkill", "/FI", '"IMAGENAME eq notepad.exe"']),
+    ).toBeUndefined();
+  });
+});
+
+describe("nested shell rescan", () => {
+  function check(command: string) {
+    return checkDangerousCommand({
+      command,
+      patterns: compileCommandPatterns([]),
+      useBuiltinMatchers: true,
+      fallbackPatterns: [],
+    });
+  }
+
+  it("sees through sh -c wrappers", () => {
+    expect(check("sh -c 'pkill omp'")?.description).toBe(
+      "host runtime mass kill (pkill against omp/bun/node)",
+    );
+  });
+
+  it("sees through powershell -c wrappers", () => {
+    expect(check('powershell -c "Stop-Process -Name node"')?.description).toBe(
+      "host runtime mass kill (Stop-Process -Name against omp/bun/node)",
+    );
+  });
+  it("caps nested depth", () => {
+    expect(
+      check(`sh -c "powershell -c \\"sh -c 'pkill omp'\\""`),
+    ).toBeUndefined();
+  });
+  it("proves the cap via explicit depth", () => {
+    const options = {
+      command: "sh -c 'pkill omp'",
+      patterns: compileCommandPatterns([]),
+      useBuiltinMatchers: true,
+      fallbackPatterns: [],
+    };
+    expect(checkDangerousCommand(options)?.description).toBe(
+      "host runtime mass kill (pkill against omp/bun/node)",
+    );
+    expect(checkDangerousCommand({ ...options, depth: 2 })).toBeUndefined();
+  });
+
+  it("ignores -c on non-shell commands", () => {
+    expect(check("grep -c omp /tmp/file")).toBeUndefined();
+  });
 });
 
 describe("checkDangerousCommand", () => {

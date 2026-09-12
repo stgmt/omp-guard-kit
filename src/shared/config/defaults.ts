@@ -128,7 +128,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
     autoDenyPatterns: [
       {
         pattern:
-          '[Tt][Aa][Ss][Kk][Kk][Ii][Ll][Ll](\\.exe)?\\s+.*/[Ii][Mm]\\s+"?(omp|bun|node)(\\.exe)?"?([\\s;]|$)',
+          "^\\s*(?:cmd(?:\\.exe)?\\s+/[cCkK]\\s+|powershell(?:\\.exe)?\\s+(?:-(?:[Cc]ommand|[cC])\\s+)?)?\\x22?\\x27?[Tt][Aa][Ss][Kk][Kk][Ii][Ll][Ll](\\.[Ee][Xx][Ee])?\\s+[\\s\\S]*?/[Ii][Mm]\\s+\\x22?([Oo][Mm][Pp]|[Bb][Uu][Nn]|[Nn][Oo][Dd][Ee])(\\.[Ee][Xx][Ee])?\\*?\\x22?([\\s;|\\x22\\x27)\\]}#`]|$)",
         regex: true,
         description:
           "host runtime mass kill (taskkill /IM against omp/bun/node)",

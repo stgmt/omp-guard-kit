@@ -49,21 +49,37 @@ const nodeFs: HookFs = {
 const defaultRun: GitRun = (args, cwd) =>
   execFileSync("git", args, { cwd, encoding: "utf8" });
 
+/** Single-quote a path for sh: close-quote, insert escaped quote, reopen. */
+function shSingleQuote(path: string): string {
+  return `'${path.replaceAll("'", "'\\''")}'`;
+}
+
 export function hookScript(distPath: string): string {
-  const safe = distPath.replaceAll('"', '\\"');
+  const safe = shSingleQuote(distPath);
   return `#!/bin/sh
 # ${HOOK_MARKER} — safe to delete this file to uninstall.
-if command -v node >/dev/null 2>&1 && [ -f "${safe}" ]; then
-  node "${safe}" --staged || exit 1
+# Kill-switch: GUARD_KIT_SKIP=1 bypasses the check entirely.
+if [ "\${GUARD_KIT_SKIP:-}" = "1" ] || [ "\${GUARD_KIT_SKIP:-}" = "true" ]; then
+  echo "guard-kit check-root: skipped (GUARD_KIT_SKIP=1)." >&2
+  exit 0
 fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "guard-kit check-root: node not found — cannot verify staged files." >&2
+  exit 1
+fi
+if [ ! -f ${safe} ]; then
+  echo "guard-kit check-root: dist missing — reinstall or delete this hook." >&2
+  exit 1
+fi
+node ${safe} --staged || exit 1
 `;
 }
 
 export function manualSnippet(distPath: string): string {
-  const safe = distPath.replaceAll('"', '\\"');
+  const safe = shSingleQuote(distPath);
   return [
     "Add this to your pre-commit hook (or run it in CI):",
-    `node "${safe}" --staged`,
+    `node ${safe} --staged`,
     "# same check, once installed from npm: guard-kit-check-root --staged",
   ].join("\n");
 }
@@ -140,4 +156,22 @@ export function installPreCommitHook(options: {
     };
   }
   return { status: "installed", detail: hookFile };
+}
+
+/**
+ * Resolves the dist check-root.js path, trying candidates in order:
+ * local build, package-relative. Returns the first that exists.
+ */
+export function resolveDistPath(
+  extensionDir: string,
+  fs: { exists: (path: string) => boolean } = { exists: existsSync },
+): string | null {
+  const candidates = [
+    resolve(extensionDir, "../../dist/check-root.js"),
+    resolve(extensionDir, "../../../dist/check-root.js"),
+  ];
+  for (const candidate of candidates) {
+    if (fs.exists(candidate)) return candidate;
+  }
+  return null;
 }

@@ -307,10 +307,9 @@ function rootEntryName(relativePath: string): string {
   return relativePath.split("/")[0] ?? "";
 }
 
-function isVcsEntry(name: string): boolean {
+export function isVcsEntry(name: string): boolean {
   return VCS_ENTRIES[name.toLowerCase()] === true;
 }
-
 function allowedByPatterns(
   name: string,
   patterns: readonly string[],

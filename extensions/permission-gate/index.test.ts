@@ -2,10 +2,7 @@ import type {
   BashToolCallEvent,
   ExtensionAPI,
   ExtensionContext,
-  ExtensionHandler,
   ReadToolCallEvent,
-  ToolCallEvent,
-  ToolCallEventResult,
 } from "@earendil-works/pi-coding-agent";
 import {
   createMock,
@@ -21,7 +18,7 @@ import {
   GUARDRAILS_PROMPT_OPENED_EVENT,
   type GuardrailsPromptOpenedPayload,
 } from "../../src/shared/events";
-import permissionGate from "./index";
+import permissionGate, { checkPermissionGateToolCall } from "./index";
 
 // Control the config the hook sees without touching the real config loader.
 vi.mock("../../src/shared/config", () => {
@@ -48,14 +45,10 @@ vi.mock("../../src/shared/config", () => {
   };
 });
 
-type ToolCallHandler = ExtensionHandler<ToolCallEvent, ToolCallEventResult>;
-
-function registeredToolCallHandler(pi: DeepMocked<ExtensionAPI>) {
-  const calls: unknown[][] = pi.on.mock.calls;
-  return calls.find(([event]) => event === "tool_call")?.[1] as
-    | ToolCallHandler
-    | undefined;
-}
+type ToolCallHandler = (
+  event: { toolName: string; input: unknown; [key: string]: unknown },
+  ctx: ExtensionContext,
+) => Promise<{ block: true; reason: string } | undefined>;
 
 function createCtx(overrides: PartialFuncReturn<ExtensionContext> = {}) {
   return createMock<ExtensionContext>({
@@ -85,7 +78,8 @@ describe("permissionGate extension hook", () => {
   beforeEach(async () => {
     pi = createMock<ExtensionAPI>();
     await permissionGate(pi);
-    toolCallHandler = registeredToolCallHandler(pi);
+    toolCallHandler = (event, ctx) =>
+      checkPermissionGateToolCall(pi, event, ctx);
   });
 
   it("registers the permissionGate feature on request", async () => {

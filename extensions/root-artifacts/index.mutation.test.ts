@@ -2,9 +2,9 @@ import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { createMock, type DeepMocked } from "@golevelup/ts-vitest";
+import { createMock } from "@golevelup/ts-vitest";
 import { describe, expect, it, vi } from "vitest";
-import rootArtifacts from "./index";
+import rootArtifacts, { checkRootArtifactsToolCall } from "./index";
 
 vi.mock("../../src/shared/config", () => ({
   configLoader: {
@@ -43,34 +43,15 @@ const deviceAddresses = [
   "s3://bucket/plan.md",
 ];
 
-type ToolCallHandler = (
-  event: {
-    type: "tool_call";
-    toolName: string;
-    toolCallId: string;
-    input: Record<string, unknown>;
-  },
-  ctx: ExtensionContext,
-) => Promise<unknown>;
-
-function registeredToolCallHandler(
-  pi: DeepMocked<ExtensionAPI>,
-): ToolCallHandler | undefined {
-  const calls = pi.on.mock.calls as unknown as Array<[string, ToolCallHandler]>;
-  return calls.find(([event]) => event === "tool_call")?.[1];
-}
-
 describe("root-artifacts direct target mutation boundaries", () => {
   it.each(deviceAddresses)("does not block device address %s", async (path) => {
     const pi = createMock<ExtensionAPI>();
     const ctx = createMock<ExtensionContext>({ cwd: "/workspace" });
     await rootArtifacts(pi);
 
-    const handler = registeredToolCallHandler(pi);
-    expect(handler).toEqual(expect.any(Function));
-    if (!handler) throw new Error("tool_call handler was not registered");
     await expect(
-      handler(
+      checkRootArtifactsToolCall(
+        pi,
         {
           type: "tool_call",
           toolName: "write",
@@ -87,11 +68,9 @@ describe("root-artifacts direct target mutation boundaries", () => {
     const ctx = createMock<ExtensionContext>({ cwd: "/workspace" });
     await rootArtifacts(pi);
 
-    const handler = registeredToolCallHandler(pi);
-    expect(handler).toEqual(expect.any(Function));
-    if (!handler) throw new Error("tool_call handler was not registered");
     await expect(
-      handler(
+      checkRootArtifactsToolCall(
+        pi,
         {
           type: "tool_call",
           toolName: "write",

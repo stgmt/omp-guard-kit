@@ -61,14 +61,16 @@ You can change everything later with:
 
 1. Start OMP from the project directory you want to protect.
 2. Run `/omp-guard-kit:onboarding` and choose the protections you want enabled.
-3. Open `/omp-guard-kit:settings` whenever you need to change a rule.
-4. Use `/omp-guard-kit:examples` to add a preset without replacing existing settings.
-5. Try a harmless write. A disallowed root file is blocked before the tool runs; an allowed nested path continues normally.
+3. Run `/omp-guard-kit:setup` in each project to enable root-artifact protection locally (global onboarding alone does not turn it on).
+4. Open `/omp-guard-kit:settings` whenever you need to change a rule.
+5. Use `/omp-guard-kit:examples` to add a preset without replacing existing settings.
+6. Try a harmless write. A disallowed root file is blocked before the tool runs; an allowed nested path continues normally.
 ## Command namespace
 
 The public command namespace follows the package name:
 
 - `/omp-guard-kit:onboarding` starts the first-run wizard.
+- `/omp-guard-kit:setup` enables root-artifact protection for the current project.
 - `/omp-guard-kit:settings` opens the settings editor.
 - `/omp-guard-kit:examples` adds presets without replacing existing settings.
 
@@ -114,9 +116,19 @@ It catches built-in risky patterns like recursive deletes, privileged commands, 
 
 ### root-artifacts
 
-The `root-artifacts` extension is disabled by default and only activates from a project-local Guard Kit settings file with `rootArtifacts.enabled: true`. Ordinary Pi stores it at `.pi/extensions/guardrails.json`; native OMP stores it at `.omp/extensions/guardrails.json`. It checks write/edit tool calls before execution and blocks root files outside the configured allowlist, root directories outside `allowedDirectories`, unresolved shell destinations, and paths that escape the project.
+The `root-artifacts` extension is disabled by default and only activates from a project-local Guard Kit settings file with `rootArtifacts.enabled: true`. The fastest path is `/omp-guard-kit:setup`, which writes that local file for the current project; the first interactive session in an unconfigured project also offers the same allowlist checklist automatically, once per project, and stays silent afterwards. Ordinary Pi stores it at `.pi/extensions/guardrails.json`; native OMP stores it at `.omp/extensions/guardrails.json`. It checks write/edit tool calls before execution and blocks root files outside the configured allowlist, root directories outside `allowedDirectories`, unresolved shell destinations, and paths that escape the project.
 
 Its policy is deterministic: deny patterns take priority, matching is case-insensitive, `.git`, `.svn`, and `.hg` are skipped, and root entries are classified as `trash`, `config`, or `unknown` for diagnostics. `autoPrune.enabled` is opt-in and atomically removes only safe stale basename entries from the local `allow` list.
+
+Tool hooks cannot see `git commit`, so commits are gated separately. The setup checklist offers to install a managed pre-commit hook that runs the staged check; foreign hooks and custom `core.hooksPath` setups are never overwritten. The same check runs standalone:
+
+```text
+guard-kit-check-root --staged
+guard-kit-check-root --staged --worktree
+guard-kit-check-root --staged --format=json
+```
+
+Unconfigured projects pass silently (exit 0); staged violations fail the commit (exit 1).
 
 Relevant configuration fields are `mode` (`extend` or `replace`), `allow`, `deny`, `allowedDirectories`, `ignorePatterns`, `trashPatterns`, `configPatterns`, and `autoPrune`.
 

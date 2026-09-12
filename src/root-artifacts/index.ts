@@ -14,6 +14,7 @@ export {
   findNearestLocalConfigPath,
   findStaleAllowEntries,
   isSafeBasename,
+  isVcsEntry,
   matchesRootPattern,
   pruneStaleAllowEntries,
   scanRootArtifacts,

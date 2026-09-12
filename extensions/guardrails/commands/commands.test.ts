@@ -5,6 +5,7 @@ import { registerGuardrailsExamplesCommand } from "./examples";
 import { registerGuardrailsOnboardingCommand } from "./onboarding";
 import { registerGuardKitCommand } from "./registration";
 import { registerGuardrailsSettings } from "./settings";
+import { registerGuardrailsSetupCommand } from "./setup";
 
 type CommandHandler = Parameters<ExtensionAPI["registerCommand"]>[1]["handler"];
 
@@ -20,11 +21,13 @@ describe("OMP Guard Kit command namespace", () => {
 
     registerGuardrailsOnboardingCommand(pi);
     registerGuardrailsSettings(pi);
+    registerGuardrailsSetupCommand(pi);
     registerGuardrailsExamplesCommand(pi);
 
     expect(registerCommand.mock.calls.map(([name]) => name)).toEqual([
       OMP_GUARD_KIT_COMMANDS.onboarding,
       OMP_GUARD_KIT_COMMANDS.settings,
+      OMP_GUARD_KIT_COMMANDS.setup,
       OMP_GUARD_KIT_COMMANDS.examples,
     ]);
   });
@@ -34,6 +37,7 @@ describe("OMP Guard Kit command namespace", () => {
 
     registerGuardrailsOnboardingCommand(pi);
     registerGuardrailsSettings(pi);
+    registerGuardrailsSetupCommand(pi);
     registerGuardrailsExamplesCommand(pi);
 
     const descriptions = registerCommand.mock.calls.map(
@@ -42,6 +46,7 @@ describe("OMP Guard Kit command namespace", () => {
     expect(descriptions).toEqual([
       "Run OMP Guard Kit onboarding",
       "Configure OMP Guard Kit settings",
+      "Enable root-artifact protection for this project",
       "Apply OMP Guard Kit example presets",
     ]);
   });

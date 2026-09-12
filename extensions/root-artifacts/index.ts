@@ -52,7 +52,7 @@ function isAtomicConfig(value: unknown): value is AtomicConfig {
   return Array.isArray(value.allow);
 }
 
-function localRootArtifactsEnabled(): boolean {
+export function isRootArtifactsLocallyEnabled(): boolean {
   const raw = configLoader.getRawConfig("local");
   if (!raw || typeof raw !== "object" || !("rootArtifacts" in raw))
     return false;
@@ -110,7 +110,7 @@ function formatViolation(path: string, reason: string): string {
   return `Root artifact blocked: ${path} — ${reason}`;
 }
 
-async function runSessionDiagnostics(
+export async function runSessionDiagnostics(
   pi: ExtensionAPI,
   cwd: string,
   config: ResolvedConfig,
@@ -167,6 +167,57 @@ async function runSessionDiagnostics(
   }
 }
 
+export async function checkRootArtifactsToolCall(
+  pi: ExtensionAPI,
+  event: { toolName: string; input: unknown; [key: string]: unknown },
+  ctx: { cwd: string },
+): Promise<{ block: true; reason: string } | undefined> {
+  const config = configLoader.getConfig();
+  if (
+    !config.enabled ||
+    !config.features.rootArtifacts ||
+    !config.rootArtifacts.enabled ||
+    !isRootArtifactsLocallyEnabled()
+  )
+    return;
+
+  const policy = createRootArtifactPolicy(config.rootArtifacts);
+  const input = event.input as Record<string, unknown>;
+  const targets = targetsForTool(event.toolName, input).sort((left, right) =>
+    left.rawPath.localeCompare(right.rawPath, undefined, {
+      sensitivity: "base",
+    }),
+  );
+  const seen = new Set<string>();
+  for (const target of targets) {
+    const key = `${target.kind}:${target.rawPath}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const decision = evaluateRootArtifactTarget(target, ctx.cwd, policy);
+    if (decision.allowed) continue;
+    const reason = formatViolation(
+      decision.relativePath || target.rawPath,
+      decision.reason ?? decision.matchedRule,
+    );
+    pi.events.emit(ROOT_ARTIFACTS_DIAGNOSTIC_EVENT, {
+      cwd: ctx.cwd,
+      toolName: event.toolName,
+      target,
+      decision,
+    });
+    return { block: true, reason };
+  }
+}
+
+export function isRootArtifactsConfigured(config: ResolvedConfig): boolean {
+  return (
+    config.enabled &&
+    config.features.rootArtifacts &&
+    config.rootArtifacts.enabled &&
+    isRootArtifactsLocallyEnabled()
+  );
+}
+
 export default async function rootArtifacts(pi: ExtensionAPI): Promise<void> {
   await configLoader.load();
 
@@ -175,55 +226,5 @@ export default async function rootArtifacts(pi: ExtensionAPI): Promise<void> {
       GUARDRAILS_FEATURE_REGISTER_EVENT,
       createFeatureRegisterPayload("rootArtifacts"),
     );
-  });
-
-  pi.on("session_start", async (_event, ctx) => {
-    const config = configLoader.getConfig();
-    if (
-      !config.enabled ||
-      !config.features.rootArtifacts ||
-      !config.rootArtifacts.enabled ||
-      !localRootArtifactsEnabled()
-    )
-      return;
-    await runSessionDiagnostics(pi, ctx.cwd, config, ctx);
-  });
-
-  pi.on("tool_call", async (event, ctx) => {
-    const config = configLoader.getConfig();
-    if (
-      !config.enabled ||
-      !config.features.rootArtifacts ||
-      !config.rootArtifacts.enabled ||
-      !localRootArtifactsEnabled()
-    )
-      return;
-
-    const policy = createRootArtifactPolicy(config.rootArtifacts);
-    const targets = targetsForTool(event.toolName, event.input).sort(
-      (left, right) =>
-        left.rawPath.localeCompare(right.rawPath, undefined, {
-          sensitivity: "base",
-        }),
-    );
-    const seen = new Set<string>();
-    for (const target of targets) {
-      const key = `${target.kind}:${target.rawPath}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const decision = evaluateRootArtifactTarget(target, ctx.cwd, policy);
-      if (decision.allowed) continue;
-      const reason = formatViolation(
-        decision.relativePath || target.rawPath,
-        decision.reason ?? decision.matchedRule,
-      );
-      pi.events.emit(ROOT_ARTIFACTS_DIAGNOSTIC_EVENT, {
-        cwd: ctx.cwd,
-        toolName: event.toolName,
-        target,
-        decision,
-      });
-      return { block: true, reason };
-    }
   });
 }

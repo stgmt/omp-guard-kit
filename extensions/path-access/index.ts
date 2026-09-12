@@ -1,5 +1,8 @@
 import { dirname } from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
 import { checkAction } from "../../src/core";
 import {
   type AllowedPath,
@@ -51,8 +54,14 @@ function extractSkillPaths(event: unknown): AllowedPath[] {
     ];
   });
 }
-
-export default async function pathAccess(pi: ExtensionAPI) {
+export default async function pathAccess(
+  pi: ExtensionAPI,
+): Promise<
+  (
+    event: { toolName: string; input: unknown; [key: string]: unknown },
+    ctx: ExtensionContext,
+  ) => Promise<{ block: true; reason: string } | undefined>
+> {
   await configLoader.load();
 
   // Pi docs paths depend only on `PI_PACKAGE_DIR` / the package root and are
@@ -74,7 +83,7 @@ export default async function pathAccess(pi: ExtensionAPI) {
   });
   setupLegacyPromptEventAlias(pi, "pathAccess");
 
-  pi.on("tool_call", async (event, ctx) => {
+  return async (event, ctx) => {
     const config = configLoader.getConfig();
     if (
       !config.enabled ||
@@ -204,5 +213,5 @@ export default async function pathAccess(pi: ExtensionAPI) {
       });
       return { block: true, reason };
     }
-  });
+  };
 }

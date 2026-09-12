@@ -87,6 +87,7 @@ async function loadNativeExtension() {
     "omp-guard-kit:examples",
     "omp-guard-kit:onboarding",
     "omp-guard-kit:settings",
+    "omp-guard-kit:setup",
   ]);
   const sessionManager = SessionManager.inMemory(projectRoot);
   const modelRegistry = { getAvailable: () => [] };

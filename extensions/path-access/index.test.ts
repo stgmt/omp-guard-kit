@@ -74,13 +74,10 @@ function emittedPromptOpened(pi: DeepMocked<ExtensionAPI>) {
   )?.[1] as GuardrailsPromptOpenedPayload | undefined;
 }
 
-function registeredExtensionHandler(
-  pi: DeepMocked<ExtensionAPI>,
-  event: string,
-) {
-  const calls: unknown[][] = pi.on.mock.calls;
-  return calls.find(([registeredEvent]) => registeredEvent === event)?.[1];
-}
+type ToolCallHandler = (
+  event: { toolName: string; input: unknown; [key: string]: unknown },
+  ctx: ExtensionContext,
+) => Promise<{ block: true; reason: string } | undefined>;
 
 describe("pathAccess extension hook", () => {
   it("emits a correlated lifecycle around an outside-path prompt", async () => {
@@ -91,9 +88,9 @@ describe("pathAccess extension hook", () => {
       mode: "tui",
     });
     ctx.ui.custom.mockResolvedValue("allow-file-once");
-    await pathAccess(pi);
-
-    const toolCallHandler = registeredExtensionHandler(pi, "tool_call");
+    const checkPathAccess = await pathAccess(pi);
+    const toolCallHandler: ToolCallHandler = (event, ctx) =>
+      checkPathAccess(event, ctx);
     assert(
       typeof toolCallHandler === "function",
       "tool_call handler should be registered",
@@ -116,9 +113,9 @@ describe("pathAccess extension hook", () => {
       mode: "tui",
     });
     ctx.ui.custom.mockRejectedValue(new Error("UI failed"));
-    await pathAccess(pi);
-
-    const toolCallHandler = registeredExtensionHandler(pi, "tool_call");
+    const checkPathAccess = await pathAccess(pi);
+    const toolCallHandler: ToolCallHandler = (event, ctx) =>
+      checkPathAccess(event, ctx);
     assert(
       typeof toolCallHandler === "function",
       "tool_call handler should be registered",
@@ -141,9 +138,9 @@ describe("pathAccess extension hook", () => {
       mode: "tui",
     });
     ctx.ui.custom.mockResolvedValue("allow-file-once");
-    await pathAccess(pi);
-
-    const toolCallHandler = registeredExtensionHandler(pi, "tool_call");
+    const checkPathAccess = await pathAccess(pi);
+    const toolCallHandler: ToolCallHandler = (event, ctx) =>
+      checkPathAccess(event, ctx);
     assert(
       typeof toolCallHandler === "function",
       "tool_call handler should be registered",
